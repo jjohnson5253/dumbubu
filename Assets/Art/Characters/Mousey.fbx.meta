@@ -12,6 +12,26 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Ch14_Body
     second: {fileID: 2100000, guid: 4f388ae6b455e554f9e443adb7cead6f, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Ch14_1001_Diffuse
+    second: {fileID: 2800000, guid: f5d694a971ec63149856061773e7087e, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Ch14_1001_Glossiness
+    second: {fileID: 2800000, guid: 3d14663dbe6ef43428dbcf367ee6acb6, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Ch14_1001_Normal
+    second: {fileID: 2800000, guid: 1775c1686565a0a4eb223182661a1818, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Ch14_1001_Specular
+    second: {fileID: 2800000, guid: 1b87469455a6886478ab390d09f61d02, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
