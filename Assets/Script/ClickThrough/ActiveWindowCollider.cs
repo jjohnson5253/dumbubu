@@ -171,15 +171,17 @@ public class ActiveWindowCollider : MonoBehaviour
     void Start()
     {
 //#if !UNITY_EDITOR
-        UpdateCurrentOpenedWindows();
-        CreateBoxColliders();
+        // COMMENTED OUT: Window collision system disabled
+        // UpdateCurrentOpenedWindows();
+        // CreateBoxColliders();
 //#endif
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateCurrentOpenedWindows();
-        UpdateBoxColliders();
+        // COMMENTED OUT: Window collision system disabled
+        // UpdateCurrentOpenedWindows();
+        // UpdateBoxColliders();
     }
 }
