@@ -16,14 +16,14 @@ public class DragSpriteRigid : MonoBehaviour
     public float doubleClickTime = 0.3f;
 
     private SpringJoint2D springJoint;
-    private Camera camera;
+    private Camera mainCamera;
     private ParticleSystem collisionParticleSystem;
     private ParticleSystem explosionParticleSystem;
     private float lastClickTime = 0f;
 
     private void Start()
     {
-        camera = Camera.main;
+        mainCamera = Camera.main;
         CreateCollisionParticleSystem();
         CreateExplosionParticleSystem();
     }
@@ -109,7 +109,7 @@ public class DragSpriteRigid : MonoBehaviour
         }
 
         RaycastHit2D hit = Physics2D.Raycast(
-                camera.ScreenToWorldPoint(Input.mousePosition),
+                mainCamera.ScreenToWorldPoint(Input.mousePosition),
                 Vector2.zero);
 
         if (hit.collider == null || !hit.rigidbody || hit.rigidbody.isKinematic)
@@ -140,7 +140,7 @@ public class DragSpriteRigid : MonoBehaviour
 
     void CheckForExplosion()
     {
-        Vector2 mouseWorldPos = camera.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero);
 
         if (hit.collider != null && hit.rigidbody && !hit.rigidbody.isKinematic)
@@ -171,7 +171,7 @@ public class DragSpriteRigid : MonoBehaviour
 
         while (Input.GetMouseButton(0))
         {
-            Vector3 mousePos = camera.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             springJoint.transform.position = mousePos;
             yield return null;
         }
