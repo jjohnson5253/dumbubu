@@ -190,6 +190,12 @@ public class DragSpriteRigid : MonoBehaviour
         {
             collisionParticleSystem.transform.position = collision.contacts[0].point;
             collisionParticleSystem.Emit(10);
+            
+            // Add points for collision and save to Steam Cloud
+            if (PointsManager.Instance != null)
+            {
+                PointsManager.Instance.AddPoints();
+            }
         }
     }
 }
