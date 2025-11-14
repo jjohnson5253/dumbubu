@@ -15,17 +15,37 @@ public class DragSpriteRigid : MonoBehaviour
     public float explosionRadius = 0.5f;
     public float doubleClickTime = 0.3f;
 
+    [Header("Animation Settings")]
+    public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
+
     private SpringJoint2D springJoint;
     private Camera mainCamera;
     private ParticleSystem collisionParticleSystem;
     private ParticleSystem explosionParticleSystem;
     private float lastClickTime = 0f;
+    
+    // Animation/Ragdoll system
+    private Animator animator;
+    private bool isRagdoll = false;
+    private bool isBeingDragged = false;
+    private Coroutine resumeAnimationCoroutine;
 
     private void Start()
     {
         mainCamera = Camera.main;
         CreateCollisionParticleSystem();
         CreateExplosionParticleSystem();
+        
+        // Find the Animator component
+        animator = GetComponent<Animator>();
+        if (animator == null)
+        {
+            Debug.LogWarning("No Animator component found on " + gameObject.name + ". Ragdoll mode won't affect animations.");
+        }
+        else
+        {
+            Debug.Log("Animator found! Animation/Ragdoll mode ready.");
+        }
     }
 
     private void CreateCollisionParticleSystem()
@@ -145,20 +165,24 @@ public class DragSpriteRigid : MonoBehaviour
 
         if (hit.collider != null && hit.rigidbody && !hit.rigidbody.isKinematic)
         {
-            // Calculate direction from click point to object center
+            // Get object center for positioning the floating text
             Vector2 objectCenter = hit.rigidbody.position;
-            Vector2 clickPoint = hit.point;
-            Vector2 explosionDirection = (objectCenter - clickPoint).normalized;
-
-            // Apply explosion force
-            hit.rigidbody.AddForce(explosionDirection * explosionForce, ForceMode2D.Impulse);
-
-            // Add some random rotation for effect
-            hit.rigidbody.AddTorque(UnityEngine.Random.Range(-5f, 5f), ForceMode2D.Impulse);
-
-            // Spawn explosion particles at click point
-            explosionParticleSystem.transform.position = clickPoint;
-            explosionParticleSystem.Emit(25);
+            
+            // Show floating points display above the sprite
+            if (PointsManager.Instance != null)
+            {
+                int totalPoints = PointsManager.Instance.GetPoints();
+                Debug.Log($"Right-clicked on sprite. Showing points: {totalPoints}");
+                FloatingPointsDisplay.ShowPoints(objectCenter, totalPoints);
+            }
+            else
+            {
+                Debug.LogWarning("PointsManager.Instance is null!");
+            }
+        }
+        else
+        {
+            Debug.Log("Right-click didn't hit a valid sprite");
         }
     }
 
@@ -168,6 +192,9 @@ public class DragSpriteRigid : MonoBehaviour
         float oldAngularDrag = this.springJoint.connectedBody.angularDrag;
         springJoint.connectedBody.drag = drag;
         springJoint.connectedBody.angularDrag = angularDrag;
+
+        // Enter ragdoll mode - disable animation
+        EnterRagdollMode();
 
         while (Input.GetMouseButton(0))
         {
@@ -182,6 +209,8 @@ public class DragSpriteRigid : MonoBehaviour
             springJoint.connectedBody.angularDrag = oldAngularDrag;
             springJoint.connectedBody = null;
         }
+        
+        isBeingDragged = false;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -196,6 +225,45 @@ public class DragSpriteRigid : MonoBehaviour
             {
                 PointsManager.Instance.AddPoints();
             }
+            
+            // Resume animation after collision
+            if (isRagdoll && !isBeingDragged)
+            {
+                // Cancel any existing resume animation coroutine
+                if (resumeAnimationCoroutine != null)
+                {
+                    StopCoroutine(resumeAnimationCoroutine);
+                }
+                // Start a new one
+                resumeAnimationCoroutine = StartCoroutine(ResumeAnimationAfterDelay());
+            }
         }
+    }
+    
+    private void EnterRagdollMode()
+    {
+        if (animator != null && !isRagdoll)
+        {
+            isRagdoll = true;
+            isBeingDragged = true;
+            animator.enabled = false;
+            Debug.Log("Entered ragdoll mode - animation disabled");
+        }
+    }
+    
+    private void ExitRagdollMode()
+    {
+        if (animator != null && isRagdoll)
+        {
+            isRagdoll = false;
+            animator.enabled = true;
+            Debug.Log("Exited ragdoll mode - animation resumed");
+        }
+    }
+    
+    private IEnumerator ResumeAnimationAfterDelay()
+    {
+        yield return new WaitForSeconds(timeToResumeAnimation);
+        ExitRagdollMode();
     }
 }
