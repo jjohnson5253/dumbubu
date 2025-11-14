@@ -123,7 +123,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+<<<<<<< HEAD
 --- !u!1 &88051669
+=======
+--- !u!1 &1900725526
+>>>>>>> dumbubu/origin
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,10 +135,17 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+<<<<<<< HEAD
   - component: {fileID: 88051672}
   - component: {fileID: 88051671}
   - component: {fileID: 88051670}
   - component: {fileID: 88051673}
+=======
+  - component: {fileID: 1900725529}
+  - component: {fileID: 1900725528}
+  - component: {fileID: 1900725527}
+  - component: {fileID: 1900725530}
+>>>>>>> dumbubu/origin
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -142,21 +153,35 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+<<<<<<< HEAD
 --- !u!81 &88051670
+=======
+--- !u!81 &1900725527
+>>>>>>> dumbubu/origin
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 88051669}
   m_Enabled: 1
 --- !u!20 &88051671
+=======
+  m_GameObject: {fileID: 1900725526}
+  m_Enabled: 1
+--- !u!20 &1900725528
+>>>>>>> dumbubu/origin
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 88051669}
+=======
+  m_GameObject: {fileID: 1900725526}
+>>>>>>> dumbubu/origin
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
@@ -193,13 +218,21 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+<<<<<<< HEAD
 --- !u!4 &88051672
+=======
+--- !u!4 &1900725529
+>>>>>>> dumbubu/origin
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 88051669}
+=======
+  m_GameObject: {fileID: 1900725526}
+>>>>>>> dumbubu/origin
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -208,13 +241,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+<<<<<<< HEAD
 --- !u!114 &88051673
+=======
+--- !u!114 &1900725530
+>>>>>>> dumbubu/origin
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<< HEAD
   m_GameObject: {fileID: 88051669}
+=======
+  m_GameObject: {fileID: 1900725526}
+>>>>>>> dumbubu/origin
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
