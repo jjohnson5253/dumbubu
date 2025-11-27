@@ -48,7 +48,7 @@ public class ShowSystemTray : MonoBehaviour
         tray = CreateSystemTrayIcon();
         if (tray != null)
         {
-            tray.SetTitle("TransparentWindowTest");
+            tray.SetTitle("Dumbubu");
             
             startup = new MenuItem("Run at Startup", new EventHandler(System_Startup_Btn));
             tray.trayMenu.MenuItems.Add(startup);
@@ -57,7 +57,7 @@ public class ShowSystemTray : MonoBehaviour
             MenuItem close = new MenuItem("Exit", new EventHandler(Close_Action));
             tray.trayMenu.MenuItems.Add(close);
 
-            tray.ShowNotification("-", "Transparent window test is running", 1000);
+            tray.ShowNotification("-", "Dumbubu is running", 1000);
 
             startup.Checked = false;
         }
