@@ -17,25 +17,43 @@ public class DragSpriteRigid : MonoBehaviour
 
     [Header("Animation Settings")]
     public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
+    public float rotationCorrectionSpeed = 10f; // Speed at which rotation corrects when dropped
+    public bool lockRotationDuringDrag = true; // Lock rotation while dragging
+    public bool continuousRotationCorrection = true; // Continuously correct rotation
 
     private SpringJoint2D springJoint;
     private Camera mainCamera;
     private ParticleSystem collisionParticleSystem;
     private ParticleSystem explosionParticleSystem;
     private float lastClickTime = 0f;
-    
+
     // Animation/Ragdoll system
     private Animator animator;
     private bool isRagdoll = false;
     private bool isBeingDragged = false;
     private Coroutine resumeAnimationCoroutine;
+    private Coroutine rotationCorrectionCoroutine;
+    private Rigidbody2D rb;
+    private RigidbodyConstraints2D originalConstraints;
 
     private void Start()
     {
         mainCamera = Camera.main;
         CreateCollisionParticleSystem();
         CreateExplosionParticleSystem();
-        
+
+        // Get Rigidbody2D component
+        rb = GetComponent<Rigidbody2D>();
+        if (rb == null)
+        {
+            Debug.LogWarning("No Rigidbody2D component found on " + gameObject.name);
+        }
+        else
+        {
+            // Store original constraints
+            originalConstraints = rb.constraints;
+        }
+
         // Find the Animator component
         animator = GetComponent<Animator>();
         if (animator == null)
@@ -45,6 +63,38 @@ public class DragSpriteRigid : MonoBehaviour
         else
         {
             Debug.Log("Animator found! Animation/Ragdoll mode ready.");
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        // Continuously correct rotation when not being dragged
+        if (rb != null && continuousRotationCorrection && !isBeingDragged)
+        {
+            // Only correct if rotation is significantly off
+            float currentRotation = rb.rotation;
+            // Normalize rotation to -180 to 180 range
+            while (currentRotation > 180f) currentRotation -= 360f;
+            while (currentRotation < -180f) currentRotation += 360f;
+
+            // If rotation is off by more than 2 degrees, correct it
+            if (Mathf.Abs(currentRotation) > 2f)
+            {
+                // Use the shorter rotation path
+                float rotationDiff = -currentRotation;
+                if (rotationDiff > 180f) rotationDiff -= 360f;
+                if (rotationDiff < -180f) rotationDiff += 360f;
+
+                // Apply rotation correction smoothly
+                float correction = rotationDiff * rotationCorrectionSpeed * Time.fixedDeltaTime;
+                float newRotation = currentRotation + correction;
+                rb.MoveRotation(newRotation);
+            }
+            else if (Mathf.Abs(currentRotation) > 0.1f)
+            {
+                // Snap to 0 if very close
+                rb.rotation = 0f;
+            }
         }
     }
 
@@ -123,6 +173,7 @@ public class DragSpriteRigid : MonoBehaviour
             lastClickTime = Time.time;
         }
 
+        // Only check for drag start on mouse down, not every frame
         if (!Input.GetMouseButtonDown(0))
         {
             return;
@@ -133,6 +184,12 @@ public class DragSpriteRigid : MonoBehaviour
                 Vector2.zero);
 
         if (hit.collider == null || !hit.rigidbody || hit.rigidbody.isKinematic)
+        {
+            return;
+        }
+
+        // Check if this object is the one being hit
+        if (hit.rigidbody != rb)
         {
             return;
         }
@@ -167,7 +224,7 @@ public class DragSpriteRigid : MonoBehaviour
         {
             // Get object center for positioning the floating text
             Vector2 objectCenter = hit.rigidbody.position;
-            
+
             // Show floating points display above the sprite
             if (PointsManager.Instance != null)
             {
@@ -188,18 +245,42 @@ public class DragSpriteRigid : MonoBehaviour
 
     IEnumerator DragObject()
     {
+        // Set isBeingDragged immediately to prevent issues
+        isBeingDragged = true;
+        
         float oldDrag = this.springJoint.connectedBody.drag;
         float oldAngularDrag = this.springJoint.connectedBody.angularDrag;
         springJoint.connectedBody.drag = drag;
         springJoint.connectedBody.angularDrag = angularDrag;
 
-        // Enter ragdoll mode - disable animation
+        // Lock rotation during drag if enabled
+        if (rb != null && lockRotationDuringDrag)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.rotation = 0f; // Ensure it starts upright
+        }
+
+        // Enter ragdoll mode - enable floating animation
         EnterRagdollMode();
 
         while (Input.GetMouseButton(0))
         {
             Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
             springJoint.transform.position = mousePos;
+            
+            // Ensure floating animation stays active during drag
+            if (animator != null && !animator.GetBool("isFloating"))
+            {
+                animator.SetBool("isFloating", true);
+                animator.SetBool("isDancing", false);
+            }
+            
+            // Keep rotation locked during drag
+            if (rb != null && lockRotationDuringDrag)
+            {
+                rb.rotation = 0f;
+            }
+            
             yield return null;
         }
 
@@ -209,8 +290,27 @@ public class DragSpriteRigid : MonoBehaviour
             springJoint.connectedBody.angularDrag = oldAngularDrag;
             springJoint.connectedBody = null;
         }
-        
+
+        // Restore original constraints
+        if (rb != null && lockRotationDuringDrag)
+        {
+            rb.constraints = originalConstraints;
+        }
+
         isBeingDragged = false;
+        
+        // Start rotation correction when dropped
+        if (rb != null)
+        {
+            StartRotationCorrection();
+        }
+        
+        // Resume animation after a delay
+        if (resumeAnimationCoroutine != null)
+        {
+            StopCoroutine(resumeAnimationCoroutine);
+        }
+        resumeAnimationCoroutine = StartCoroutine(ResumeAnimationAfterDelay());
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -219,15 +319,22 @@ public class DragSpriteRigid : MonoBehaviour
         {
             collisionParticleSystem.transform.position = collision.contacts[0].point;
             collisionParticleSystem.Emit(10);
-            
+
             // Add points for collision and save to Steam Cloud
             if (PointsManager.Instance != null)
             {
                 PointsManager.Instance.AddPoints();
+                animator.SetTrigger("fall");
             }
-            
+
+            // Start rotation correction after collision
+            if (rb != null && !isBeingDragged)
+            {
+                StartRotationCorrection();
+            }
+
             // Resume animation after collision
-            if (isRagdoll && !isBeingDragged)
+            if (!isBeingDragged)
             {
                 // Cancel any existing resume animation coroutine
                 if (resumeAnimationCoroutine != null)
@@ -235,35 +342,100 @@ public class DragSpriteRigid : MonoBehaviour
                     StopCoroutine(resumeAnimationCoroutine);
                 }
                 // Start a new one
+
                 resumeAnimationCoroutine = StartCoroutine(ResumeAnimationAfterDelay());
             }
         }
     }
-    
+
     private void EnterRagdollMode()
     {
-        if (animator != null && !isRagdoll)
+        if (animator != null)
         {
             isRagdoll = true;
-            isBeingDragged = true;
-            animator.enabled = false;
-            Debug.Log("Entered ragdoll mode - animation disabled");
+            // Ensure floating animation is set
+            animator.SetBool("isDancing", false);
+            animator.SetBool("isFloating", true);
+            animator.SetTrigger("fall");
+            Debug.Log("Entered ragdoll mode - floating animation enabled");
+            Debug.Log($"[ENTER] isDancing: {animator.GetBool("isDancing")} | isFloating: {animator.GetBool("isFloating")}");
         }
     }
-    
+
     private void ExitRagdollMode()
     {
-        if (animator != null && isRagdoll)
+        if (animator != null)
         {
             isRagdoll = false;
-            animator.enabled = true;
+
+          Debug.Log("get_up3");
+            animator.SetBool("isFloating", false);
+            animator.SetBool("isDancing", true);
+            animator.SetTrigger("dance");
+
+            Debug.Log($"[EXIT] isDancing: {animator.GetBool("isDancing")} | isFloating: {animator.GetBool("isFloating")}");
             Debug.Log("Exited ragdoll mode - animation resumed");
         }
     }
-    
+
     private IEnumerator ResumeAnimationAfterDelay()
     {
+        animator.SetTrigger("get_up");
         yield return new WaitForSeconds(timeToResumeAnimation);
         ExitRagdollMode();
+    }
+
+    private void StartRotationCorrection()
+    {
+        // Stop any existing rotation correction
+        if (rotationCorrectionCoroutine != null)
+        {
+            StopCoroutine(rotationCorrectionCoroutine);
+        }
+        rotationCorrectionCoroutine = StartCoroutine(CorrectRotation());
+    }
+
+    private IEnumerator CorrectRotation()
+    {
+        if (rb == null) yield break;
+
+        // Target rotation is 0 (upright)
+        float targetRotation = 0f;
+        float currentRotation = rb.rotation;
+
+        // Normalize rotation to -180 to 180 range
+        while (currentRotation > 180f) currentRotation -= 360f;
+        while (currentRotation < -180f) currentRotation += 360f;
+
+        // If rotation is close to 0, we're done
+        if (Mathf.Abs(currentRotation) < 1f)
+        {
+            rb.rotation = 0f;
+            yield break;
+        }
+
+        // Smoothly rotate to target
+        while (Mathf.Abs(currentRotation - targetRotation) > 0.5f)
+        {
+            currentRotation = rb.rotation;
+            // Normalize rotation to -180 to 180 range
+            while (currentRotation > 180f) currentRotation -= 360f;
+            while (currentRotation < -180f) currentRotation += 360f;
+
+            // Use the shorter rotation path
+            float rotationDiff = targetRotation - currentRotation;
+            if (rotationDiff > 180f) rotationDiff -= 360f;
+            if (rotationDiff < -180f) rotationDiff += 360f;
+
+            // Apply rotation correction
+            float newRotation = currentRotation + rotationDiff * rotationCorrectionSpeed * Time.fixedDeltaTime;
+            rb.MoveRotation(newRotation);
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        // Snap to final rotation
+        rb.rotation = 0f;
+        rotationCorrectionCoroutine = null;
     }
 }
