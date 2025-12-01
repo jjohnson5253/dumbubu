@@ -7,6 +7,7 @@
       "bundle": "1x9000;2x999;3x1",
       "name": "Blind Box",
       "description": "Contains one random dumbubu",
+      "icon_url": "https://i.ibb.co/dwhKTvXf/blindbox-hd-best.png",
       "tradable": false,
       "marketable": false,
       "drop_interval": 10
