@@ -119,19 +119,19 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonsRect.sizeDelta = new Vector2(-20, 40);
         
         // Create Brown button
-        CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), () => {
+        CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), DumbubuColor.Brown, () => {
             if (TextureSwitcher.Instance != null)
                 TextureSwitcher.Instance.SwitchColor(DumbubuColor.Brown);
         });
         
         // Create White button
-        CreateButton(buttonsContainer, "White", new Vector2(80, 0), () => {
+        CreateButton(buttonsContainer, "White", new Vector2(80, 0), DumbubuColor.White, () => {
             if (TextureSwitcher.Instance != null)
                 TextureSwitcher.Instance.SwitchColor(DumbubuColor.White);
         });
     }
     
-    private static void CreateButton(GameObject parent, string label, Vector2 position, System.Action onClick)
+    private static void CreateButton(GameObject parent, string label, Vector2 position, DumbubuColor color, System.Action onClick)
     {
         GameObject buttonObj = new GameObject(label + "Button");
         buttonObj.transform.SetParent(parent.transform);
@@ -175,9 +175,15 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonText.text = label;
         buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         buttonText.fontSize = 18;
-        buttonText.color = Color.white;
+        
+        // Check if color is available and grey out if locked
+        bool isAvailable = TextureSwitcher.Instance != null && TextureSwitcher.Instance.IsColorAvailable(color);
+        buttonText.color = isAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.fontStyle = FontStyle.Bold;
+        
+        // Disable button if not available
+        button.interactable = isAvailable;
     }
     
     private static void CreateCanvas()
