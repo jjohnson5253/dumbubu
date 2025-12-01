@@ -92,7 +92,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
-        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 80); // Offset above the sprite
+        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 170); // Offset above the sprite
         
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
@@ -121,13 +121,13 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Create Brown button
         CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), () => {
             if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchToBrown();
+                TextureSwitcher.Instance.SwitchColor(LabubuColor.Brown);
         });
         
         // Create White button
         CreateButton(buttonsContainer, "White", new Vector2(80, 0), () => {
             if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchToWhite();
+                TextureSwitcher.Instance.SwitchColor(LabubuColor.White);
         });
     }
     

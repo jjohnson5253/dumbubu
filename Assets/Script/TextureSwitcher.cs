@@ -1,15 +1,30 @@
 using UnityEngine;
+using System.Collections.Generic;
+
+public enum LabubuColor
+{
+    Brown,
+    White
+}
 
 public class TextureSwitcher : MonoBehaviour
 {
     public static TextureSwitcher Instance { get; private set; }
     
-    [Header("Textures")]
-    public Texture2D brownTexture;
-    public Texture2D whiteTexture;
+    [System.Serializable]
+    public class ColorTexture
+    {
+        public LabubuColor color;
+        public Texture2D texture;
+    }
+    
+    [Header("Color Textures")]
+    public List<ColorTexture> colorTextures = new List<ColorTexture>();
     
     [Header("Material")]
     public Material targetMaterial;
+    
+    private Dictionary<LabubuColor, Texture2D> textureLookup;
     
     private void Awake()
     {
@@ -27,12 +42,37 @@ public class TextureSwitcher : MonoBehaviour
     {
         Debug.Log("TextureSwitcher Start() called");
         
-        // Check if textures are assigned
-        Debug.Log($"Brown texture assigned: {brownTexture != null}");
-        if (brownTexture != null) Debug.Log($"Brown texture name: {brownTexture.name}");
+        // Build lookup dictionary
+        textureLookup = new Dictionary<LabubuColor, Texture2D>();
+        foreach (var colorTexture in colorTextures)
+        {
+            if (colorTexture.texture != null)
+            {
+                textureLookup[colorTexture.color] = colorTexture.texture;
+                Debug.Log($"{colorTexture.color} texture assigned: {colorTexture.texture.name}");
+            }
+        }
         
-        Debug.Log($"White texture assigned: {whiteTexture != null}");
-        if (whiteTexture != null) Debug.Log($"White texture name: {whiteTexture.name}");
+        // Load textures from Resources if not assigned
+        if (!textureLookup.ContainsKey(LabubuColor.Brown))
+        {
+            Texture2D brownTexture = Resources.Load<Texture2D>("Textures/brown_texture");
+            if (brownTexture != null)
+            {
+                textureLookup[LabubuColor.Brown] = brownTexture;
+                Debug.Log($"Loaded Brown texture from Resources: {brownTexture.name}");
+            }
+        }
+        
+        if (!textureLookup.ContainsKey(LabubuColor.White))
+        {
+            Texture2D whiteTexture = Resources.Load<Texture2D>("Textures/white_texture");
+            if (whiteTexture != null)
+            {
+                textureLookup[LabubuColor.White] = whiteTexture;
+                Debug.Log($"Loaded White texture from Resources: {whiteTexture.name}");
+            }
+        }
         
         // Find the material if not assigned
         if (targetMaterial == null)
@@ -65,35 +105,35 @@ public class TextureSwitcher : MonoBehaviour
         }
     }
     
-    public void SwitchToBrown()
+    public void SwitchColor(LabubuColor color)
     {
-        Debug.Log("SwitchToBrown() called");
-        Debug.Log($"targetMaterial: {targetMaterial != null}, brownTexture: {brownTexture != null}");
+        Debug.Log($"SwitchColor({color}) called");
         
-        if (targetMaterial != null && brownTexture != null)
+        if (targetMaterial == null)
         {
-            targetMaterial.mainTexture = brownTexture;
-            Debug.Log($"Switched to brown texture. Current texture: {targetMaterial.mainTexture.name}");
+            Debug.LogWarning("Cannot switch color - targetMaterial is null");
+            return;
+        }
+        
+        if (textureLookup.TryGetValue(color, out Texture2D texture))
+        {
+            targetMaterial.mainTexture = texture;
+            Debug.Log($"Switched to {color} texture. Current texture: {targetMaterial.mainTexture.name}");
         }
         else
         {
-            Debug.LogWarning($"Cannot switch to brown - targetMaterial: {targetMaterial}, brownTexture: {brownTexture}");
+            Debug.LogWarning($"Cannot switch to {color} - texture not found in lookup");
         }
+    }
+    
+    // Legacy methods for backwards compatibility
+    public void SwitchToBrown()
+    {
+        SwitchColor(LabubuColor.Brown);
     }
     
     public void SwitchToWhite()
     {
-        Debug.Log("SwitchToWhite() called");
-        Debug.Log($"targetMaterial: {targetMaterial != null}, whiteTexture: {whiteTexture != null}");
-        
-        if (targetMaterial != null && whiteTexture != null)
-        {
-            targetMaterial.mainTexture = whiteTexture;
-            Debug.Log($"Switched to white texture. Current texture: {targetMaterial.mainTexture.name}");
-        }
-        else
-        {
-            Debug.LogWarning($"Cannot switch to white - targetMaterial: {targetMaterial}, whiteTexture: {whiteTexture}");
-        }
+        SwitchColor(LabubuColor.White);
     }
 }
