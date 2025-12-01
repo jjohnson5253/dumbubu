@@ -18,12 +18,20 @@ public class FloatingPointsDisplay : MonoBehaviour
             CreateCanvas();
         }
         
-        // Create the floating text
+        // Create the floating text container
         GameObject textObj = new GameObject("FloatingPoints");
         textObj.transform.SetParent(canvas.transform);
         
+        // Add grey background box
+        Image background = textObj.AddComponent<Image>();
+        background.color = new Color(0.3f, 0.3f, 0.3f, 0.9f); // Grey with slight transparency
+        
+        // Create child object for the text
+        GameObject textChild = new GameObject("PointsText");
+        textChild.transform.SetParent(textObj.transform);
+        
         // Add regular UI Text component (more compatible)
-        Text uiText = textObj.AddComponent<Text>();
+        Text uiText = textChild.AddComponent<Text>();
         uiText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         uiText.fontSize = 32;
         uiText.color = Color.yellow;
@@ -31,18 +39,25 @@ public class FloatingPointsDisplay : MonoBehaviour
         uiText.fontStyle = FontStyle.Bold;
         
         // Add outline for better visibility
-        Outline outline = textObj.AddComponent<Outline>();
+        Outline outline = textChild.AddComponent<Outline>();
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
+        
+        // Set child text to fill parent
+        RectTransform textRect = textChild.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
         
         // Set text content
         uiText.text = $"Total: {points} pts";
         
         Debug.Log($"Showing floating points: {points}");
         
-        // Position the text
+        // Position and size the container box
         RectTransform rectTransform = textObj.GetComponent<RectTransform>();
-        rectTransform.sizeDelta = new Vector2(300, 60);
+        rectTransform.sizeDelta = new Vector2(300, 80);
         
         // Convert world position to screen position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
