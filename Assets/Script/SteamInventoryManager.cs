@@ -11,8 +11,10 @@ public class SteamInventoryManager : MonoBehaviour
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
     private SteamInventoryResult_t m_inventoryResult = SteamInventoryResult_t.Invalid;
+    private SteamInventoryResult_t m_dropResult = SteamInventoryResult_t.Invalid;
     
     public System.Action OnInventoryLoaded;
+    public System.Action<int> OnItemDropped; // Called when an item is dropped with the itemDefId
     
     private void Awake()
     {
@@ -34,11 +36,22 @@ public class SteamInventoryManager : MonoBehaviour
         {
             m_SteamInventoryResultReady = Callback<SteamInventoryResultReady_t>.Create(OnSteamInventoryResultReady);
             LoadInventory();
+            
+            // Trigger initial drop check on game load
+            TriggerItemDrop(69420);
+            
+            // Check for drops every minute
+            InvokeRepeating("CheckForPlaytimeDrop", 60f, 60f);
         }
         else
         {
             Debug.LogWarning("SteamManager not initialized. Cannot load inventory.");
         }
+    }
+    
+    private void CheckForPlaytimeDrop()
+    {
+        TriggerItemDrop(69420);
     }
     
     public void LoadInventory()
@@ -86,8 +99,39 @@ public class SteamInventoryManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"Inventory contains {itemCount} items");
+        Debug.Log($"Inventory result contains {itemCount} items");
         
+        // Check if this is a drop result (from TriggerItemDrop)
+        if (pCallback.m_handle == m_dropResult)
+        {
+            if (itemCount > 0)
+            {
+                // Get the dropped items
+                SteamItemDetails_t[] items = new SteamItemDetails_t[itemCount];
+                if (SteamInventory.GetResultItems(pCallback.m_handle, items, ref itemCount))
+                {
+                    foreach (var item in items)
+                    {
+                        int itemDefId = item.m_iDefinition.m_SteamItemDef;
+                        Debug.Log($"Item dropped! ItemDefID={itemDefId}, Quantity={item.m_unQuantity}");
+                        OnItemDropped?.Invoke(itemDefId);
+                    }
+                    
+                    // Reload inventory to get updated state
+                    LoadInventory();
+                }
+            }
+            else
+            {
+                Debug.Log("TriggerItemDrop returned empty - player not eligible yet");
+            }
+            
+            SteamInventory.DestroyResult(pCallback.m_handle);
+            m_dropResult = SteamInventoryResult_t.Invalid;
+            return;
+        }
+        
+        // Regular inventory load
         if (itemCount == 0)
         {
             inventoryLoaded = true;
@@ -96,12 +140,12 @@ public class SteamInventoryManager : MonoBehaviour
         }
         
         // Get the actual items
-        SteamItemDetails_t[] items = new SteamItemDetails_t[itemCount];
-        if (SteamInventory.GetResultItems(pCallback.m_handle, items, ref itemCount))
+        SteamItemDetails_t[] allItems = new SteamItemDetails_t[itemCount];
+        if (SteamInventory.GetResultItems(pCallback.m_handle, allItems, ref itemCount))
         {
             ownedItemDefIds.Clear();
             
-            foreach (var item in items)
+            foreach (var item in allItems)
             {
                 int itemDefId = item.m_iDefinition.m_SteamItemDef;
                 ownedItemDefIds.Add(itemDefId);
@@ -111,21 +155,52 @@ public class SteamInventoryManager : MonoBehaviour
             inventoryLoaded = true;
             OnInventoryLoaded?.Invoke();
         }
-        else
-        {
-            Debug.LogError("Failed to get result items");
-        }
-        
-        // Clean up the result
-        SteamInventory.DestroyResult(pCallback.m_handle);
+    /// <summary>
+    /// Get all owned item definition IDs
+    /// </summary>
+    public HashSet<int> GetOwnedItems()
+    {
+        return new HashSet<int>(ownedItemDefIds);
     }
     
     /// <summary>
-    /// Check if the player owns a specific item
+    /// Trigger a playtime item drop. Call this at significant game moments (end of level, match, etc.)
     /// </summary>
-    public bool HasItem(int itemDefId)
+    /// <param name="playtimeGeneratorDefId">The itemdefid of the "playtimegenerator" type item</param>
+    public void TriggerItemDrop(int playtimeGeneratorDefId)
     {
-        if (!inventoryLoaded)
+        if (!SteamManager.Initialized)
+        {
+            Debug.LogWarning("Cannot trigger item drop - Steam not initialized");
+            return;
+        }
+        
+        Debug.Log($"Triggering item drop for playtime generator {playtimeGeneratorDefId}...");
+        
+        SteamItemDef_t itemDef = new SteamItemDef_t(playtimeGeneratorDefId);
+        
+        if (SteamInventory.TriggerItemDrop(out m_dropResult, itemDef))
+        {
+            Debug.Log("TriggerItemDrop called successfully - waiting for callback");
+        }
+        else
+        {
+            Debug.LogError("Failed to trigger item drop");
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        if (m_inventoryResult != SteamInventoryResult_t.Invalid)
+        {
+            SteamInventory.DestroyResult(m_inventoryResult);
+        }
+        
+        if (m_dropResult != SteamInventoryResult_t.Invalid)
+        {
+            SteamInventory.DestroyResult(m_dropResult);
+        }
+    }   if (!inventoryLoaded)
         {
             Debug.LogWarning("Inventory not loaded yet");
             return false;
