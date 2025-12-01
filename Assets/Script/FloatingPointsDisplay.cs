@@ -178,10 +178,6 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonText.color = Color.white;
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.fontStyle = FontStyle.Bold;
-        
-        // Add the click-to-dismiss component
-        ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
-        clickHandler.Initialize();
     }
     
     private static void CreateCanvas()
@@ -205,10 +201,22 @@ public class FloatingPointsDisplay : MonoBehaviour
 public class ClickToDismiss : MonoBehaviour
 {
     private RectTransform rectTransform;
+    private GraphicRaycaster raycaster;
     
     public void Initialize()
     {
         rectTransform = GetComponent<RectTransform>();
+        
+        // Add GraphicRaycaster to canvas if it doesn't exist
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            raycaster = canvas.GetComponent<GraphicRaycaster>();
+            if (raycaster == null)
+            {
+                raycaster = canvas.gameObject.AddComponent<GraphicRaycaster>();
+            }
+        }
     }
     
     private void Update()
@@ -216,13 +224,34 @@ public class ClickToDismiss : MonoBehaviour
         // Check for mouse click
         if (Input.GetMouseButtonDown(0))
         {
-            // Check if click is outside this UI element
+            // Check if we clicked on a button first
+            if (IsPointerOverButton())
+            {
+                return; // Don't dismiss if clicking a button
+            }
+            
+            // Check if click is outside the main container
             if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition))
             {
                 // Click was outside, destroy this text
                 Destroy(gameObject);
             }
         }
+    }
+    
+    private bool IsPointerOverButton()
+    {
+        // Check if mouse is over any button
+        Button[] buttons = GetComponentsInChildren<Button>();
+        foreach (Button button in buttons)
+        {
+            RectTransform buttonRect = button.GetComponent<RectTransform>();
+            if (RectTransformUtility.RectangleContainsScreenPoint(buttonRect, Input.mousePosition))
+            {
+                return true;
+            }
+        }
+        return false;
     }
     
     private void OnDestroy()
