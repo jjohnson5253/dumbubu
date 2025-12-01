@@ -541,6 +541,10 @@ MonoBehaviour:
   explosionForce: 10
   explosionRadius: 0.5
   doubleClickTime: 0.3
+  timeToResumeAnimation: 0.5
+  rotationCorrectionSpeed: 10
+  lockRotationDuringDrag: 1
+  continuousRotationCorrection: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1075,6 +1079,56 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1377971156
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1377971158}
+  - component: {fileID: 1377971157}
+  m_Layer: 0
+  m_Name: TextureSwitcher
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1377971157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377971156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e15584f78866748369b91868f878a77c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  colorTextures:
+  - color: 0
+    texture: {fileID: 2800000, guid: 9c9286d1fed76a84f82c5c1deced4040, type: 3}
+  - color: 1
+    texture: {fileID: 2800000, guid: 613427cfe0f8143ffbfe91f57475deea, type: 3}
+  targetMaterial: {fileID: 2100000, guid: 4028cd773b653614c8920b9a3b6edd2a, type: 2}
+--- !u!4 &1377971158
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377971156}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1564277932
 GameObject:
   m_ObjectHideFlags: 0
@@ -1340,6 +1394,10 @@ MonoBehaviour:
   explosionForce: 10
   explosionRadius: 0.5
   doubleClickTime: 0.3
+  timeToResumeAnimation: 0.5
+  rotationCorrectionSpeed: 10
+  lockRotationDuringDrag: 1
+  continuousRotationCorrection: 1
 --- !u!61 &1931958287
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2127,7 +2185,7 @@ GameObject:
   - component: {fileID: 4586163393330704972}
   - component: {fileID: 4586163393330704971}
   m_Layer: 0
-  m_Name: Labubu
+  m_Name: Dumbubu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2303,6 +2361,10 @@ MonoBehaviour:
   explosionForce: 10
   explosionRadius: 0.5
   doubleClickTime: 0.3
+  timeToResumeAnimation: 0.5
+  rotationCorrectionSpeed: 10
+  lockRotationDuringDrag: 1
+  continuousRotationCorrection: 1
 --- !u!1 &4646615612897294476
 GameObject:
   m_ObjectHideFlags: 0
