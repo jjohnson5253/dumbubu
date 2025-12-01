@@ -2,9 +2,19 @@
   "appid": 4160160,
   "items": [
     {
+      "itemdefid": 69420,
+      "type": "playtimegenerator",
+      "bundle": "1x9000;2x999;3x1",
+      "name": "Blind Box",
+      "description": "Contains one random dumbubu",
+      "tradable": false,
+      "marketable": false,
+      "drop_interval": 10
+    },
+    {
       "itemdefid": 1,
       "type": "item",
-      "name": "White Fur",
+      "name": "White",
       "description": "[b]Rarity: [color=#d4d4d4]Common[/color][/b] ⭐️\n\n[i]“I'm a common dumbubu”[/i]\n\n[url=https://store.steampowered.com/app/4160160/Dumbubu][u]Download Dumbubu now.[/u][/url]",
       "name_color": "d4d4d4",
       "icon_url": "https://fastly.picsum.photos/id/1/200/300.jpg?hmac=jH5bDkLr6Tgy3oAg5khKCHeunZMHq0ehBZr6vGifPLY",
@@ -16,7 +26,7 @@
     {
       "itemdefid": 2,
       "type": "item",
-      "name": "Blue Fur",
+      "name": "Blue",
       "description": "[b]Rarity: [color=#70e7fe]Rare[/color][/b] ⭐️⭐️⭐️\n\n[i]“I'm a rare dumbubu”[/i]\n\n[url=https://store.steampowered.com/app/4160160/Dumbubu][u]Download Dumbubu now.[/u][/url]",
       "icon_url": "https://fastly.picsum.photos/id/1/200/300.jpg?hmac=jH5bDkLr6Tgy3oAg5khKCHeunZMHq0ehBZr6vGifPLY",
       "name_color": "70e7fe",
@@ -28,7 +38,7 @@
     {
       "itemdefid": 3,
       "type": "item",
-      "name": "Pink Fur",
+      "name": "Pink",
       "description": "[b]Rarity: [color=#ffac64]Legendary[/color][/b] ⭐️⭐️⭐️⭐️⭐️\n\n[i]“I'm a legendary dumbubu”[/i]\n\n[url=https://store.steampowered.com/app/4160160/Dumbubu][u]Download Dumbubu now.[/u][/url]",
       "icon_url": "https://fastly.picsum.photos/id/1/200/300.jpg?hmac=jH5bDkLr6Tgy3oAg5khKCHeunZMHq0ehBZr6vGifPLY",
       "name_color": "ffac64",
