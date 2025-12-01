@@ -6,12 +6,35 @@ public class FloatingPointsDisplay : MonoBehaviour
 {
     private static GameObject canvasObject;
     private static Canvas canvas;
+    private static GameObject currentPointsDisplay; // Track the current display
+    
+    /// <summary>
+    /// Check if a points display is currently showing
+    /// </summary>
+    public static bool IsDisplaying()
+    {
+        return currentPointsDisplay != null;
+    }
+    
+    /// <summary>
+    /// Clear the current display reference (called when display is destroyed)
+    /// </summary>
+    public static void ClearCurrentDisplay()
+    {
+        currentPointsDisplay = null;
+    }
     
     /// <summary>
     /// Show floating points display at a world position
     /// </summary>
     public static void ShowPoints(Vector3 worldPosition, int points)
     {
+        // Don't create a new display if one already exists
+        if (currentPointsDisplay != null)
+        {
+            return;
+        }
+        
         // Create canvas if it doesn't exist
         if (canvas == null)
         {
@@ -21,6 +44,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Create the floating text container
         GameObject textObj = new GameObject("FloatingPoints");
         textObj.transform.SetParent(canvas.transform);
+        currentPointsDisplay = textObj; // Store reference
         
         // Add grey background box
         Image background = textObj.AddComponent<Image>();
@@ -109,6 +133,12 @@ public class ClickToDismiss : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+    }
+    
+    private void OnDestroy()
+    {
+        // Clear the reference when destroyed
+        FloatingPointsDisplay.ClearCurrentDisplay();
     }
 }
 

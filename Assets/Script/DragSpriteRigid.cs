@@ -217,6 +217,12 @@ public class DragSpriteRigid : MonoBehaviour
 
     void CheckForExplosion()
     {
+        // Don't show points if one is already displaying
+        if (FloatingPointsDisplay.IsDisplaying())
+        {
+            return;
+        }
+        
         Vector2 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero);
 
