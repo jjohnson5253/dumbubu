@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public enum LabubuColor
+public enum DumbubuColor
 {
     Brown,
     White
@@ -14,7 +14,7 @@ public class TextureSwitcher : MonoBehaviour
     [System.Serializable]
     public class ColorTexture
     {
-        public LabubuColor color;
+        public DumbubuColor color;
         public Texture2D texture;
     }
     
@@ -24,7 +24,7 @@ public class TextureSwitcher : MonoBehaviour
     [Header("Material")]
     public Material targetMaterial;
     
-    private Dictionary<LabubuColor, Texture2D> textureLookup;
+    private Dictionary<DumbubuColor, Texture2D> textureLookup;
     
     private void Awake()
     {
@@ -43,7 +43,7 @@ public class TextureSwitcher : MonoBehaviour
         Debug.Log("TextureSwitcher Start() called");
         
         // Build lookup dictionary
-        textureLookup = new Dictionary<LabubuColor, Texture2D>();
+        textureLookup = new Dictionary<DumbubuColor, Texture2D>();
         foreach (var colorTexture in colorTextures)
         {
             if (colorTexture.texture != null)
@@ -54,22 +54,22 @@ public class TextureSwitcher : MonoBehaviour
         }
         
         // Load textures from Resources if not assigned
-        if (!textureLookup.ContainsKey(LabubuColor.Brown))
+        if (!textureLookup.ContainsKey(DumbubuColor.Brown))
         {
             Texture2D brownTexture = Resources.Load<Texture2D>("Textures/brown_texture");
             if (brownTexture != null)
             {
-                textureLookup[LabubuColor.Brown] = brownTexture;
+                textureLookup[DumbubuColor.Brown] = brownTexture;
                 Debug.Log($"Loaded Brown texture from Resources: {brownTexture.name}");
             }
         }
         
-        if (!textureLookup.ContainsKey(LabubuColor.White))
+        if (!textureLookup.ContainsKey(DumbubuColor.White))
         {
             Texture2D whiteTexture = Resources.Load<Texture2D>("Textures/white_texture");
             if (whiteTexture != null)
             {
-                textureLookup[LabubuColor.White] = whiteTexture;
+                textureLookup[DumbubuColor.White] = whiteTexture;
                 Debug.Log($"Loaded White texture from Resources: {whiteTexture.name}");
             }
         }
@@ -77,17 +77,17 @@ public class TextureSwitcher : MonoBehaviour
         // Find the material if not assigned
         if (targetMaterial == null)
         {
-            Debug.Log("Searching for Labubu GameObject...");
-            // Try to find the Labubu model and get its material
-            GameObject labubu = GameObject.Find("Labubu");
-            if (labubu != null)
+            Debug.Log("Searching for Dumbubu GameObject...");
+            // Try to find the Dumbubu model and get its material
+            GameObject dumbubu = GameObject.Find("Dumbubu");
+            if (dumbubu != null)
             {
-                Debug.Log("Found Labubu GameObject");
-                SkinnedMeshRenderer renderer = labubu.GetComponentInChildren<SkinnedMeshRenderer>();
+                Debug.Log("Found Dumbubu GameObject");
+                SkinnedMeshRenderer renderer = dumbubu.GetComponentInChildren<SkinnedMeshRenderer>();
                 if (renderer != null && renderer.materials.Length > 0)
                 {
                     targetMaterial = renderer.materials[0];
-                    Debug.Log($"Found mat_0 material on Labubu: {targetMaterial.name}");
+                    Debug.Log($"Found mat_0 material on Dumbubu: {targetMaterial.name}");
                 }
                 else
                 {
@@ -96,7 +96,7 @@ public class TextureSwitcher : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Labubu GameObject not found in scene");
+                Debug.LogWarning("Dumbubu GameObject not found in scene");
             }
         }
         else
@@ -105,7 +105,7 @@ public class TextureSwitcher : MonoBehaviour
         }
     }
     
-    public void SwitchColor(LabubuColor color)
+    public void SwitchColor(DumbubuColor color)
     {
         Debug.Log($"SwitchColor({color}) called");
         
@@ -129,11 +129,11 @@ public class TextureSwitcher : MonoBehaviour
     // Legacy methods for backwards compatibility
     public void SwitchToBrown()
     {
-        SwitchColor(LabubuColor.Brown);
+        SwitchColor(DumbubuColor.Brown);
     }
     
     public void SwitchToWhite()
     {
-        SwitchColor(LabubuColor.White);
+        SwitchColor(DumbubuColor.White);
     }
 }

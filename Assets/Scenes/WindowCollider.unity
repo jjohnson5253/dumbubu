@@ -1108,8 +1108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e15584f78866748369b91868f878a77c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brownTexture: {fileID: 2800000, guid: 9c9286d1fed76a84f82c5c1deced4040, type: 3}
-  whiteTexture: {fileID: 2800000, guid: 613427cfe0f8143ffbfe91f57475deea, type: 3}
+  colorTextures: []
   targetMaterial: {fileID: 2100000, guid: 4028cd773b653614c8920b9a3b6edd2a, type: 2}
 --- !u!4 &1377971158
 Transform:
@@ -2182,7 +2181,7 @@ GameObject:
   - component: {fileID: 4586163393330704972}
   - component: {fileID: 4586163393330704971}
   m_Layer: 0
-  m_Name: Labubu
+  m_Name: Dumbubu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

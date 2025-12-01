@@ -121,13 +121,13 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Create Brown button
         CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), () => {
             if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(LabubuColor.Brown);
+                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Brown);
         });
         
         // Create White button
         CreateButton(buttonsContainer, "White", new Vector2(80, 0), () => {
             if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(LabubuColor.White);
+                TextureSwitcher.Instance.SwitchColor(DumbubuColor.White);
         });
     }
     
