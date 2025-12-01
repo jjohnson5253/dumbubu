@@ -67,10 +67,10 @@ public class FloatingPointsDisplay : MonoBehaviour
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
         
-        // Set child text to fill parent
+        // Set child text to fill parent (top portion only, leaving space for buttons)
         RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
+        textRect.anchorMin = new Vector2(0, 0.4f);
+        textRect.anchorMax = new Vector2(1, 1);
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
         
@@ -88,7 +88,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 80);
+        rectTransform.sizeDelta = new Vector2(300, 140); // Increased height for buttons
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
@@ -96,6 +96,88 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
+        
+        // Create buttons container
+        CreateColorButtons(textObj);
+        
+        // Add the click-to-dismiss component
+        ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
+        clickHandler.Initialize();
+    }
+    
+    private static void CreateColorButtons(GameObject parent)
+    {
+        // Create buttons container
+        GameObject buttonsContainer = new GameObject("ButtonsContainer");
+        buttonsContainer.transform.SetParent(parent.transform);
+        
+        RectTransform buttonsRect = buttonsContainer.AddComponent<RectTransform>();
+        buttonsRect.anchorMin = new Vector2(0, 0);
+        buttonsRect.anchorMax = new Vector2(1, 0);
+        buttonsRect.pivot = new Vector2(0.5f, 0);
+        buttonsRect.anchoredPosition = new Vector2(0, 10);
+        buttonsRect.sizeDelta = new Vector2(-20, 40);
+        
+        // Create Brown button
+        CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), () => {
+            if (TextureSwitcher.Instance != null)
+                TextureSwitcher.Instance.SwitchToBrown();
+        });
+        
+        // Create White button
+        CreateButton(buttonsContainer, "White", new Vector2(80, 0), () => {
+            if (TextureSwitcher.Instance != null)
+                TextureSwitcher.Instance.SwitchToWhite();
+        });
+    }
+    
+    private static void CreateButton(GameObject parent, string label, Vector2 position, System.Action onClick)
+    {
+        GameObject buttonObj = new GameObject(label + "Button");
+        buttonObj.transform.SetParent(parent.transform);
+        
+        RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
+        buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
+        buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
+        buttonRect.pivot = new Vector2(0.5f, 0.5f);
+        buttonRect.anchoredPosition = position;
+        buttonRect.sizeDelta = new Vector2(120, 35);
+        
+        // Add button background
+        Image buttonBg = buttonObj.AddComponent<Image>();
+        buttonBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+        
+        // Add Button component
+        Button button = buttonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        
+        // Set button colors
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0.2f, 0.2f, 0.2f, 1f);
+        colors.highlightedColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+        button.colors = colors;
+        
+        // Add click listener
+        button.onClick.AddListener(() => onClick());
+        
+        // Create button text
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(buttonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = label;
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 18;
+        buttonText.color = Color.white;
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
         
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
