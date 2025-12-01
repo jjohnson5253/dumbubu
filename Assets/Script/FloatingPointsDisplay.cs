@@ -81,11 +81,21 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Position and size the container box
         RectTransform rectTransform = textObj.GetComponent<RectTransform>();
+        
+        // Set pivot to center
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        
+        // Set size
         rectTransform.sizeDelta = new Vector2(300, 80);
         
-        // Convert world position to screen position
+        // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
         rectTransform.position = screenPos + new Vector3(0, 80, 0); // Offset above the sprite
+        
+        // Reset scale to ensure it's not affected by parent scaling
+        rectTransform.localScale = Vector3.one;
         
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
