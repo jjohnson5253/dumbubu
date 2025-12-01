@@ -155,6 +155,37 @@ public class SteamInventoryManager : MonoBehaviour
             inventoryLoaded = true;
             OnInventoryLoaded?.Invoke();
         }
+        else
+        {
+            Debug.LogError("Failed to get result items");
+        }
+        
+        // Clean up the result
+        SteamInventory.DestroyResult(pCallback.m_handle);
+    }
+    
+    /// <summary>
+    /// Check if the player owns a specific item
+    /// </summary>
+    public bool HasItem(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return false;
+        }
+        
+        return ownedItemDefIds.Contains(itemDefId);
+    }
+    
+    /// <summary>
+    /// Check if inventory has been loaded
+    /// </summary>
+    public bool IsInventoryLoaded()
+    {
+        return inventoryLoaded;
+    }
+    
     /// <summary>
     /// Get all owned item definition IDs
     /// </summary>
@@ -199,37 +230,6 @@ public class SteamInventoryManager : MonoBehaviour
         if (m_dropResult != SteamInventoryResult_t.Invalid)
         {
             SteamInventory.DestroyResult(m_dropResult);
-        }
-    }   if (!inventoryLoaded)
-        {
-            Debug.LogWarning("Inventory not loaded yet");
-            return false;
-        }
-        
-        return ownedItemDefIds.Contains(itemDefId);
-    }
-    
-    /// <summary>
-    /// Check if inventory has been loaded
-    /// </summary>
-    public bool IsInventoryLoaded()
-    {
-        return inventoryLoaded;
-    }
-    
-    /// <summary>
-    /// Get all owned item definition IDs
-    /// </summary>
-    public HashSet<int> GetOwnedItems()
-    {
-        return new HashSet<int>(ownedItemDefIds);
-    }
-    
-    private void OnDestroy()
-    {
-        if (m_inventoryResult != SteamInventoryResult_t.Invalid)
-        {
-            SteamInventory.DestroyResult(m_inventoryResult);
         }
     }
 }
