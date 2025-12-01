@@ -88,7 +88,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 140); // Increased height for buttons
+        rectTransform.sizeDelta = new Vector2(300, 190); // Increased height for buttons
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
@@ -115,7 +115,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonsRect.anchorMin = new Vector2(0, 0);
         buttonsRect.anchorMax = new Vector2(1, 0);
         buttonsRect.pivot = new Vector2(0.5f, 0);
-        buttonsRect.anchoredPosition = new Vector2(0, 10);
+        buttonsRect.anchoredPosition = new Vector2(0, 60);
         buttonsRect.sizeDelta = new Vector2(-20, 40);
         
         // Create Brown button
@@ -128,6 +128,18 @@ public class FloatingPointsDisplay : MonoBehaviour
         CreateButton(buttonsContainer, "White", new Vector2(80, 0), DumbubuColor.White, () => {
             if (TextureSwitcher.Instance != null)
                 TextureSwitcher.Instance.SwitchColor(DumbubuColor.White);
+        });
+
+        // Create Blue button
+        CreateButton(buttonsContainer, "Blue", new Vector2(-80, -50), DumbubuColor.Blue, () => {
+            if (TextureSwitcher.Instance != null)
+                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Blue);
+        });
+
+        // Create Pink button
+        CreateButton(buttonsContainer, "Pink", new Vector2(80, -50), DumbubuColor.Pink, () => {
+            if (TextureSwitcher.Instance != null)
+                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Pink);
         });
     }
     

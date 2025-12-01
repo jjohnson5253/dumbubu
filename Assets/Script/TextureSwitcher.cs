@@ -4,7 +4,9 @@ using System.Collections.Generic;
 public enum DumbubuColor
 {
     Brown,
-    White
+    White,
+    Blue,
+    Pink
 }
 
 public class TextureSwitcher : MonoBehaviour
@@ -55,27 +57,6 @@ public class TextureSwitcher : MonoBehaviour
                 textureLookup[colorTexture.color] = colorTexture.texture;
                 itemRequirements[colorTexture.color] = colorTexture.requiredItemDefId;
                 Debug.Log($"{colorTexture.color} texture assigned: {colorTexture.texture.name}, requires item: {colorTexture.requiredItemDefId}");
-            }
-        }
-        
-        // Load textures from Resources if not assigned
-        if (!textureLookup.ContainsKey(DumbubuColor.Brown))
-        {
-            Texture2D brownTexture = Resources.Load<Texture2D>("Textures/brown_texture");
-            if (brownTexture != null)
-            {
-                textureLookup[DumbubuColor.Brown] = brownTexture;
-                Debug.Log($"Loaded Brown texture from Resources: {brownTexture.name}");
-            }
-        }
-        
-        if (!textureLookup.ContainsKey(DumbubuColor.White))
-        {
-            Texture2D whiteTexture = Resources.Load<Texture2D>("Textures/white_texture");
-            if (whiteTexture != null)
-            {
-                textureLookup[DumbubuColor.White] = whiteTexture;
-                Debug.Log($"Loaded White texture from Resources: {whiteTexture.name}");
             }
         }
         
@@ -171,16 +152,5 @@ public class TextureSwitcher : MonoBehaviour
         
         // No requirement, always available
         return true;
-    }
-    
-    // Legacy methods for backwards compatibility
-    public void SwitchToBrown()
-    {
-        SwitchColor(DumbubuColor.Brown);
-    }
-    
-    public void SwitchToWhite()
-    {
-        SwitchColor(DumbubuColor.White);
     }
 }
