@@ -48,9 +48,9 @@ public class FloatingPointsDisplay : MonoBehaviour
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
         rectTransform.position = screenPos + new Vector3(0, 80, 0); // Offset above the sprite
         
-        // Add the animation component
-        FloatingTextAnimation animation = textObj.AddComponent<FloatingTextAnimation>();
-        animation.Initialize(2.0f, 60f);
+        // Add the click-to-dismiss component
+        ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
+        clickHandler.Initialize();
     }
     
     private static void CreateCanvas()
@@ -71,59 +71,29 @@ public class FloatingPointsDisplay : MonoBehaviour
 }
 
 /// <summary>
-/// Handles the animation of floating text
+/// Handles click-to-dismiss functionality for floating text
 /// </summary>
-public class FloatingTextAnimation : MonoBehaviour
+public class ClickToDismiss : MonoBehaviour
 {
-    private float duration;
-    private float floatDistance;
-    private float startTime;
-    private Vector3 startPosition;
-    private CanvasGroup canvasGroup;
+    private RectTransform rectTransform;
     
-    public void Initialize(float duration, float floatDistance)
+    public void Initialize()
     {
-        this.duration = duration;
-        this.floatDistance = floatDistance;
-        
-        startTime = Time.time;
-        startPosition = transform.position;
-        
-        // Add CanvasGroup for fading
-        canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        
-        StartCoroutine(AnimateText());
+        rectTransform = GetComponent<RectTransform>();
     }
     
-    private IEnumerator AnimateText()
+    private void Update()
     {
-        float elapsedTime = 0f;
-        
-        while (elapsedTime < duration)
+        // Check for mouse click
+        if (Input.GetMouseButtonDown(0))
         {
-            elapsedTime = Time.time - startTime;
-            float progress = elapsedTime / duration;
-            
-            // Move up
-            Vector3 newPosition = startPosition + Vector3.up * floatDistance * progress;
-            transform.position = newPosition;
-            
-            // Fade out (start fading after 50% of duration)
-            if (progress > 0.5f)
+            // Check if click is outside this UI element
+            if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition))
             {
-                float fadeProgress = (progress - 0.5f) / 0.5f;
-                canvasGroup.alpha = 1f - fadeProgress;
+                // Click was outside, destroy this text
+                Destroy(gameObject);
             }
-            
-            // Scale effect (slight grow then shrink)
-            float scale = 1f + Mathf.Sin(progress * Mathf.PI) * 0.3f;
-            transform.localScale = Vector3.one * scale;
-            
-            yield return null;
         }
-        
-        // Destroy after animation
-        Destroy(gameObject);
     }
 }
 
