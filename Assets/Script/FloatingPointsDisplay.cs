@@ -57,7 +57,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Add regular UI Text component (more compatible)
         Text uiText = textChild.AddComponent<Text>();
         uiText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        uiText.fontSize = 32;
+        uiText.fontSize = 22; // 30% smaller (32 * 0.7 = 22.4)
         uiText.color = Color.yellow;
         uiText.alignment = TextAnchor.MiddleCenter;
         uiText.fontStyle = FontStyle.Bold;
@@ -67,15 +67,15 @@ public class FloatingPointsDisplay : MonoBehaviour
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
         
-        // Set child text to fill parent (top portion only, leaving space for buttons)
+        // Set child text to fill parent (moved up higher)
         RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0, 0.4f);
+        textRect.anchorMin = new Vector2(0, 0.5f);
         textRect.anchorMax = new Vector2(1, 1);
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
         
         // Set text content
-        uiText.text = $"Total: {points} pts";
+        uiText.text = $"Total: {points} points";
         
         Debug.Log($"Showing floating points: {points}");
         
@@ -85,20 +85,26 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Set anchors to bottom-left for consistent positioning
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.zero;
-        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.55f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 190); // Increased height for buttons
+        rectTransform.sizeDelta = new Vector2(300, 220); // Increased height for buttons
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
-        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 170); // Offset above the sprite
+        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 340); // Offset above the sprite
         
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
         
         // Create buttons container
         CreateColorButtons(textObj);
+        
+        // Create close button in top-right corner
+        CreateCloseButton(textObj);
+        
+        // Create quit button at the bottom
+        CreateQuitButton(textObj);
         
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
@@ -115,7 +121,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonsRect.anchorMin = new Vector2(0, 0);
         buttonsRect.anchorMax = new Vector2(1, 0);
         buttonsRect.pivot = new Vector2(0.5f, 0);
-        buttonsRect.anchoredPosition = new Vector2(0, 60);
+        buttonsRect.anchoredPosition = new Vector2(0, 100);
         buttonsRect.sizeDelta = new Vector2(-20, 40);
         
         // Create Brown button
@@ -141,6 +147,115 @@ public class FloatingPointsDisplay : MonoBehaviour
             if (TextureSwitcher.Instance != null)
                 TextureSwitcher.Instance.SwitchColor(DumbubuColor.Pink);
         });
+    }
+    
+    private static void CreateCloseButton(GameObject parent)
+    {
+        GameObject closeButtonObj = new GameObject("CloseButton");
+        closeButtonObj.transform.SetParent(parent.transform);
+        
+        RectTransform closeButtonRect = closeButtonObj.AddComponent<RectTransform>();
+        closeButtonRect.anchorMin = new Vector2(1f, 1f); // Top-right corner
+        closeButtonRect.anchorMax = new Vector2(1f, 1f);
+        closeButtonRect.pivot = new Vector2(1f, 1f);
+        closeButtonRect.anchoredPosition = new Vector2(-5, -5); // 5 pixel margin from edges
+        closeButtonRect.sizeDelta = new Vector2(25, 25); // Small square button
+        
+        // Add button background
+        Image buttonBg = closeButtonObj.AddComponent<Image>();
+        buttonBg.color = new Color(0.8f, 0.2f, 0.2f, 0.9f); // Red background
+        
+        // Add Button component
+        Button button = closeButtonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        
+        // Set button colors for hover effects
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0.8f, 0.2f, 0.2f, 0.9f);
+        colors.highlightedColor = new Color(1f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = new Color(0.6f, 0.1f, 0.1f, 1f);
+        button.colors = colors;
+        
+        // Add click listener to close the menu
+        button.onClick.AddListener(() => {
+            if (currentPointsDisplay != null)
+            {
+                Destroy(currentPointsDisplay);
+            }
+        });
+        
+        // Create "X" text
+        GameObject textObj = new GameObject("XText");
+        textObj.transform.SetParent(closeButtonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = "×"; // Using multiplication symbol for a cleaner X
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 18;
+        buttonText.color = Color.white;
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
+    }
+    
+    private static void CreateQuitButton(GameObject parent)
+    {
+        GameObject quitButtonObj = new GameObject("QuitButton");
+        quitButtonObj.transform.SetParent(parent.transform);
+        
+        RectTransform quitButtonRect = quitButtonObj.AddComponent<RectTransform>();
+        quitButtonRect.anchorMin = new Vector2(0.5f, 0f); // Bottom center
+        quitButtonRect.anchorMax = new Vector2(0.5f, 0f);
+        quitButtonRect.pivot = new Vector2(0.5f, 0f);
+        quitButtonRect.anchoredPosition = new Vector2(0, 10); // 10 pixel margin from bottom
+        quitButtonRect.sizeDelta = new Vector2(100, 30); // Rectangular button
+        
+        // Add button background
+        Image buttonBg = quitButtonObj.AddComponent<Image>();
+        buttonBg.color = new Color(0.6f, 0.2f, 0.2f, 0.9f); // Dark red background
+        
+        // Add Button component
+        Button button = quitButtonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        
+        // Set button colors for hover effects
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0.6f, 0.2f, 0.2f, 0.9f);
+        colors.highlightedColor = new Color(0.8f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = new Color(0.4f, 0.1f, 0.1f, 1f);
+        button.colors = colors;
+        
+        // Add click listener to quit the game
+        button.onClick.AddListener(() => {
+            Debug.Log("Quit button clicked - closing application");
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+        });
+        
+        // Create "Quit" text
+        GameObject textObj = new GameObject("QuitText");
+        textObj.transform.SetParent(quitButtonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = "Quit";
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 16;
+        buttonText.color = Color.white;
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
     }
     
     private static void CreateButton(GameObject parent, string label, Vector2 position, DumbubuColor color, System.Action onClick)
@@ -259,7 +374,7 @@ public class ClickToDismiss : MonoBehaviour
     
     private bool IsPointerOverButton()
     {
-        // Check if mouse is over any button
+        // Check if mouse is over any button (including close button)
         Button[] buttons = GetComponentsInChildren<Button>();
         foreach (Button button in buttons)
         {
