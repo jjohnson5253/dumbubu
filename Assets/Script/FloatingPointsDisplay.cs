@@ -103,6 +103,9 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Create close button in top-right corner
         CreateCloseButton(textObj);
         
+        // Create quit button at the bottom
+        CreateQuitButton(textObj);
+        
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
         clickHandler.Initialize();
@@ -195,6 +198,61 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonText.text = "×"; // Using multiplication symbol for a cleaner X
         buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         buttonText.fontSize = 18;
+        buttonText.color = Color.white;
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
+    }
+    
+    private static void CreateQuitButton(GameObject parent)
+    {
+        GameObject quitButtonObj = new GameObject("QuitButton");
+        quitButtonObj.transform.SetParent(parent.transform);
+        
+        RectTransform quitButtonRect = quitButtonObj.AddComponent<RectTransform>();
+        quitButtonRect.anchorMin = new Vector2(0.5f, 0f); // Bottom center
+        quitButtonRect.anchorMax = new Vector2(0.5f, 0f);
+        quitButtonRect.pivot = new Vector2(0.5f, 0f);
+        quitButtonRect.anchoredPosition = new Vector2(0, 10); // 10 pixel margin from bottom
+        quitButtonRect.sizeDelta = new Vector2(100, 30); // Rectangular button
+        
+        // Add button background
+        Image buttonBg = quitButtonObj.AddComponent<Image>();
+        buttonBg.color = new Color(0.6f, 0.2f, 0.2f, 0.9f); // Dark red background
+        
+        // Add Button component
+        Button button = quitButtonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        
+        // Set button colors for hover effects
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0.6f, 0.2f, 0.2f, 0.9f);
+        colors.highlightedColor = new Color(0.8f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = new Color(0.4f, 0.1f, 0.1f, 1f);
+        button.colors = colors;
+        
+        // Add click listener to quit the game
+        button.onClick.AddListener(() => {
+            Debug.Log("Quit button clicked - closing application");
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+        });
+        
+        // Create "Quit" text
+        GameObject textObj = new GameObject("QuitText");
+        textObj.transform.SetParent(quitButtonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = "Quit";
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 16;
         buttonText.color = Color.white;
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.fontStyle = FontStyle.Bold;
