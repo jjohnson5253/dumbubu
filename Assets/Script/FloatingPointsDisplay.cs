@@ -57,7 +57,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Add regular UI Text component (more compatible)
         Text uiText = textChild.AddComponent<Text>();
         uiText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        uiText.fontSize = 32;
+        uiText.fontSize = 22; // 30% smaller (32 * 0.7 = 22.4)
         uiText.color = Color.yellow;
         uiText.alignment = TextAnchor.MiddleCenter;
         uiText.fontStyle = FontStyle.Bold;
@@ -67,15 +67,15 @@ public class FloatingPointsDisplay : MonoBehaviour
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
         
-        // Set child text to fill parent (top portion only, leaving space for buttons)
+        // Set child text to fill parent (moved up higher)
         RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0, 0.4f);
+        textRect.anchorMin = new Vector2(0, 0.5f);
         textRect.anchorMax = new Vector2(1, 1);
         textRect.offsetMin = Vector2.zero;
         textRect.offsetMax = Vector2.zero;
         
         // Set text content
-        uiText.text = $"Total: {points} pts";
+        uiText.text = $"Total: {points} points";
         
         Debug.Log($"Showing floating points: {points}");
         
@@ -85,14 +85,14 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Set anchors to bottom-left for consistent positioning
         rectTransform.anchorMin = Vector2.zero;
         rectTransform.anchorMax = Vector2.zero;
-        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.55f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 190); // Increased height for buttons
+        rectTransform.sizeDelta = new Vector2(300, 220); // Increased height for buttons
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
-        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 170); // Offset above the sprite
+        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 340); // Offset above the sprite
         
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
@@ -121,7 +121,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         buttonsRect.anchorMin = new Vector2(0, 0);
         buttonsRect.anchorMax = new Vector2(1, 0);
         buttonsRect.pivot = new Vector2(0.5f, 0);
-        buttonsRect.anchoredPosition = new Vector2(0, 60);
+        buttonsRect.anchoredPosition = new Vector2(0, 100);
         buttonsRect.sizeDelta = new Vector2(-20, 40);
         
         // Create Brown button
