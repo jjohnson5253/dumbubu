@@ -1,4 +1,4 @@
-# 🐾 Dumbubu - Vitual Desktop Pet
+# 🐾 Dumbubu - Virtual Desktop Pet
 
 <div align="center">
   
