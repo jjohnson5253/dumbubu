@@ -149,15 +149,20 @@ public class MenuDisplay : MonoBehaviour
         Image buttonBg = grenadeModeButtonObj.AddComponent<Image>();
         buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
         
+        // Check if grenade mode is available (need 100 points)
+        bool isGrenadeModeAvailable = PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= 100;
+        
         // Add Button component
         Button button = grenadeModeButtonObj.AddComponent<Button>();
         button.targetGraphic = buttonBg;
+        button.interactable = isGrenadeModeAvailable;
         
         // Set button colors
         ColorBlock colors = button.colors;
         colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
         colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
         colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
+        colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
         button.colors = colors;
         
         // Add click listener to toggle grenade mode and update button appearance
@@ -192,7 +197,7 @@ public class MenuDisplay : MonoBehaviour
         buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
         buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         buttonText.fontSize = 16;
-        buttonText.color = Color.white;
+        buttonText.color = isGrenadeModeAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
         buttonText.alignment = TextAnchor.MiddleCenter;
         buttonText.fontStyle = FontStyle.Bold;
     }

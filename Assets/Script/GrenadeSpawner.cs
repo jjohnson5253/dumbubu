@@ -40,7 +40,7 @@ public class GrenadeSpawner : MonoBehaviour
 
         // Get mouse position in world space
         Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorldPos.z = 0; // Ensure it's at z=0 for 2D
+        mouseWorldPos.z = -2; // Place in front of Dumbubu (lower Z = closer to camera)
 
         // don't spawn grenade if clicking rigid body (likely character). 
         // This lets dragging of character still happen.
