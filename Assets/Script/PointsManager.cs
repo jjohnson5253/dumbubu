@@ -16,12 +16,12 @@ public class PointsManager : MonoBehaviour
     public int pointsPerCollision = 1;
     public int currentPoints = 0;
     
-    [Header("Dev Settings")]
-    public bool useDevOverride = false;
-    public int devOverridePoints = 1000;
-    
     [Header("Display Settings")]
     public bool showPointsInConsole = true;
+    
+    // Dev override - set to true to use devOverridePoints instead of saved points
+    private const bool useDevOverride = false;
+    private const int devOverridePoints = 1000;
     
     private SaveData saveData = new SaveData();
     private const float AUTO_SAVE_INTERVAL = 5f; // Save every 5 seconds
