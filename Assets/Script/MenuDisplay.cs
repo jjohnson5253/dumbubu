@@ -106,7 +106,7 @@ public class MenuDisplay : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.55f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 220); // Increased height for buttons
+        rectTransform.sizeDelta = new Vector2(300, 260); // Increased height for grenade button
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
