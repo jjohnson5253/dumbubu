@@ -123,6 +123,12 @@ public class Grenade : MonoBehaviour
 
                 // Add some random rotation for effect
                 targetRb.AddTorque(UnityEngine.Random.Range(-5f, 5f), ForceMode2D.Impulse);
+                
+                // Add points if this is Dumbubu
+                if (targetRb.gameObject.name == "Dumbubu" && PointsManager.Instance != null)
+                {
+                    PointsManager.Instance.AddPoints();
+                }
             }
         }
 
