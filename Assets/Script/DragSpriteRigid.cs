@@ -18,7 +18,8 @@ public class DragSpriteRigid : MonoBehaviour
     [Header("Animation Settings")]
     public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
     public float stillTimeBeforeGetUp = 2f; // Time character must be still before getting up
-    public float maxVelocityForStill = 1f; // Maximum velocity to consider character "still"
+    public float maxVelocityForStill = 0.5f; // Maximum velocity to consider character "still"
+    public float groundOffsetFromBottom = 1f; // How far from bottom of screen to consider "on ground"
 
     [Header("Throw Settings")]
     public float throwSensitivity = 15f; // How responsive the throw is (higher = more responsive)
@@ -258,7 +259,7 @@ public class DragSpriteRigid : MonoBehaviour
         {
             StopCoroutine(resumeAnimationCoroutine);
         }
-        resumeAnimationCoroutine = StartCoroutine(ResumeAnimationAfterDelay());
+        resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -286,7 +287,7 @@ public class DragSpriteRigid : MonoBehaviour
                 }
                 // Start a new one
 
-                resumeAnimationCoroutine = StartCoroutine(ResumeAnimationAfterDelay());
+                resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
             }
         }
     }
@@ -319,20 +320,34 @@ public class DragSpriteRigid : MonoBehaviour
         return velocityMagnitude <= maxVelocityForStill;
     }
 
-    private IEnumerator ResumeAnimationAfterDelay()
+    private bool IsOnGround()
+    {
+        if (rb == null || mainCamera == null) return false;
+        
+        // Calculate the bottom of the screen in world coordinates
+        float screenBottom = mainCamera.ScreenToWorldPoint(new Vector3(0, 0, 0)).y;
+        float groundThreshold = screenBottom + groundOffsetFromBottom;
+        
+        // Check if character's Y position is at or below the ground threshold
+        return transform.position.y <= groundThreshold;
+    }
+
+    private IEnumerator ExitFloatingAnimation()
     {
         if (animator == null || rb == null)
         {
             yield break;
         }
 
-        // Wait until character stops moving
-        while (!IsStill())
+        // Wait until character stops moving AND is on the ground
+        while (!IsStill() || !IsOnGround())
         {
+            Debug.Log($"Waiting... Velocity: {rb.velocity.magnitude}, Y pos: {transform.position.y}, On ground: {IsOnGround()}");
             yield return null;
         }
 
-        // Immediately resume dancing animation when stopped
+        Debug.Log("Character is still and on ground! Resuming dancing animation.");
+        // Resume dancing animation when stopped and on ground
         ExitRagdollMode();
     }
 
