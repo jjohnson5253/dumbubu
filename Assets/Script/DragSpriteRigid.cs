@@ -295,6 +295,12 @@ public class DragSpriteRigid : MonoBehaviour
             animator.SetBool("isFloating", false);
             animator.SetBool("isDancing", true);
         }
+        
+        // Smoothly rotate character back to upright position
+        if (rb != null)
+        {
+            rb.rotation = 0f;
+        }
     }
 
     private bool IsStill()
