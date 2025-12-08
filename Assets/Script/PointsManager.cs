@@ -16,6 +16,10 @@ public class PointsManager : MonoBehaviour
     public int pointsPerCollision = 1;
     public int currentPoints = 0;
     
+    [Header("Dev Settings")]
+    public bool useDevOverride = false;
+    public int devOverridePoints = 1000;
+    
     [Header("Display Settings")]
     public bool showPointsInConsole = true;
     
@@ -139,6 +143,18 @@ public class PointsManager : MonoBehaviour
     /// </summary>
     private void LoadGameData()
     {
+        // Use dev override if enabled
+        if (useDevOverride)
+        {
+            currentPoints = devOverridePoints;
+            if (showPointsInConsole)
+            {
+                Debug.Log($"Dev override enabled! Points set to: {devOverridePoints}");
+            }
+            OnPointsChanged?.Invoke(currentPoints);
+            return;
+        }
+        
         if (SteamCloudSaveManager.Instance == null) 
         {
             Debug.LogWarning("SteamCloudSaveManager not found. Starting with 0 points.");
