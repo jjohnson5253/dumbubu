@@ -43,7 +43,7 @@ public class GrenadeSpawner : MonoBehaviour
         mouseWorldPos.z = 0; // Ensure it's at z=0 for 2D
 
         // don't spawn grenade if clicking rigid body (likely character). 
-        // This lets dragging of character still happen
+        // This lets dragging of character still happen.
         RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero);
         if (hit.collider != null && hit.rigidbody != null)
         {

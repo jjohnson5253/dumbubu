@@ -30,12 +30,10 @@ public class DragSpriteRigid : MonoBehaviour
     private Camera mainCamera;
     private ParticleSystem collisionParticleSystem;
     private ParticleSystem explosionParticleSystem;
-    private float lastClickTime = 0f;
     private Vector2 previousMousePosition;
 
     // Animation/Ragdoll system
     private Animator animator;
-    private bool isRagdoll = false;
     private bool isBeingDragged = false;
     private Coroutine resumeAnimationCoroutine;
     private Coroutine rotationCorrectionCoroutine;
@@ -395,7 +393,6 @@ public class DragSpriteRigid : MonoBehaviour
     {
         if (animator != null)
         {
-            isRagdoll = true;
             // Ensure floating animation is set
             animator.SetBool("isDancing", false);
             animator.SetBool("isFloating", true);
@@ -406,9 +403,6 @@ public class DragSpriteRigid : MonoBehaviour
     {
         if (animator != null)
         {
-            isRagdoll = false;
-
-         
             animator.SetBool("isFloating", false);
             animator.SetBool("isDancing", true);
    
