@@ -163,20 +163,8 @@ public class DragSpriteRigid : MonoBehaviour
         // Check for right click explosion
         if (Input.GetMouseButtonDown(1))
         {
-            CheckForExplosion();
+            ShowMenu();
             return;
-        }
-
-        // Check for double click explosion
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (Time.time - lastClickTime < doubleClickTime)
-            {
-                CheckForExplosion();
-                lastClickTime = 0f;
-                return;
-            }
-            lastClickTime = Time.time;
         }
 
         // Only check for drag start on mouse down, not every frame
@@ -203,7 +191,7 @@ public class DragSpriteRigid : MonoBehaviour
         StartCoroutine(DragObject());
     }
 
-    void CheckForExplosion()
+    void ShowMenu()
     {
         // Don't show points if one is already displaying
         if (FloatingPointsDisplay.IsDisplaying())
