@@ -2,18 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class FloatingPointsDisplay : MonoBehaviour
+public class MenuDisplay : MonoBehaviour
 {
     private static GameObject canvasObject;
     private static Canvas canvas;
-    private static GameObject currentPointsDisplay; // Track the current display
+    private static GameObject currentMenuDisplay; // Track the current display
     
     /// <summary>
-    /// Check if a points display is currently showing
+    /// Check if a menu display is currently showing
     /// </summary>
     public static bool IsDisplaying()
     {
-        return currentPointsDisplay != null;
+        return currentMenuDisplay != null;
     }
     
     /// <summary>
@@ -21,16 +21,16 @@ public class FloatingPointsDisplay : MonoBehaviour
     /// </summary>
     public static void ClearCurrentDisplay()
     {
-        currentPointsDisplay = null;
+        currentMenuDisplay = null;
     }
     
     /// <summary>
-    /// Show floating points display at a world position
+    /// Show menu display at a world position
     /// </summary>
-    public static void ShowPoints(Vector3 worldPosition, int points)
+    public static void ShowMenu(Vector3 worldPosition, int points)
     {
         // Don't create a new display if one already exists
-        if (currentPointsDisplay != null)
+        if (currentMenuDisplay != null)
         {
             return;
         }
@@ -41,10 +41,10 @@ public class FloatingPointsDisplay : MonoBehaviour
             CreateCanvas();
         }
         
-        // Create the floating text container
-        GameObject textObj = new GameObject("FloatingPoints");
+        // Create the menu container
+        GameObject textObj = new GameObject("MenuDisplay");
         textObj.transform.SetParent(canvas.transform);
-        currentPointsDisplay = textObj; // Store reference
+        currentMenuDisplay = textObj; // Store reference
         
         // Add grey background box
         Image background = textObj.AddComponent<Image>();
@@ -77,7 +77,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Set text content
         uiText.text = $"Total: {points} points";
         
-        Debug.Log($"Showing floating points: {points}");
+        Debug.Log($"Showing points: {points}");
         
         // Position and size the container box
         RectTransform rectTransform = textObj.GetComponent<RectTransform>();
@@ -178,9 +178,9 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Add click listener to close the menu
         button.onClick.AddListener(() => {
-            if (currentPointsDisplay != null)
+            if (currentMenuDisplay != null)
             {
-                Destroy(currentPointsDisplay);
+                Destroy(currentMenuDisplay);
             }
         });
         
@@ -315,7 +315,7 @@ public class FloatingPointsDisplay : MonoBehaviour
     
     private static void CreateCanvas()
     {
-        canvasObject = new GameObject("FloatingPointsCanvas");
+        canvasObject = new GameObject("MenuCanvas");
         canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 1000; // Make sure it's on top
@@ -324,7 +324,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         DontDestroyOnLoad(canvasObject);
         
-        Debug.Log("FloatingPointsCanvas created!");
+        Debug.Log("MenuCanvas created!");
     }
 }
 
@@ -390,7 +390,7 @@ public class ClickToDismiss : MonoBehaviour
     private void OnDestroy()
     {
         // Clear the reference when destroyed
-        FloatingPointsDisplay.ClearCurrentDisplay();
+        MenuDisplay.ClearCurrentDisplay();
     }
 }
 

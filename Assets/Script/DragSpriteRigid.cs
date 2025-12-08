@@ -194,7 +194,7 @@ public class DragSpriteRigid : MonoBehaviour
     void ShowMenu()
     {
         // Don't show points if one is already displaying
-        if (FloatingPointsDisplay.IsDisplaying())
+        if (MenuDisplay.IsDisplaying())
         {
             return;
         }
@@ -212,7 +212,7 @@ public class DragSpriteRigid : MonoBehaviour
             {
                 int totalPoints = PointsManager.Instance.GetPoints();
                 Debug.Log($"Right-clicked on sprite. Showing points: {totalPoints}");
-                FloatingPointsDisplay.ShowPoints(objectCenter, totalPoints);
+                MenuDisplay.ShowMenu(objectCenter, totalPoints);
             }
             else
             {
