@@ -17,9 +17,6 @@ public class DragSpriteRigid : MonoBehaviour
 
     [Header("Animation Settings")]
     public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
-    public float rotationCorrectionSpeed = 10f; // Speed at which rotation corrects when dropped
-    public bool lockRotationDuringDrag = true; // Lock rotation while dragging
-    public bool continuousRotationCorrection = true; // Continuously correct rotation
     public float stillTimeBeforeGetUp = 2f; // Time character must be still before getting up
     public float maxVelocityForStill = 0.5f; // Maximum velocity to consider character "still"
 
@@ -27,6 +24,7 @@ public class DragSpriteRigid : MonoBehaviour
     public float throwSensitivity = 15f; // How responsive the throw is (higher = more responsive)
     public float maxThrowVelocity = 15f; // Maximum velocity when throwing
 
+    private SpringJoint2D springJoint;
     private Camera mainCamera;
     private ParticleSystem collisionParticleSystem;
     private ParticleSystem explosionParticleSystem;
@@ -36,7 +34,6 @@ public class DragSpriteRigid : MonoBehaviour
     private Animator animator;
     private bool isBeingDragged = false;
     private Coroutine resumeAnimationCoroutine;
-    private Coroutine rotationCorrectionCoroutine;
     private Rigidbody2D rb;
     private RigidbodyConstraints2D originalConstraints;
 
@@ -70,37 +67,6 @@ public class DragSpriteRigid : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        // Continuously correct rotation when not being dragged
-        if (rb != null && continuousRotationCorrection && !isBeingDragged)
-        {
-            // Only correct if rotation is significantly off
-            float currentRotation = rb.rotation;
-            // Normalize rotation to -180 to 180 range
-            while (currentRotation > 180f) currentRotation -= 360f;
-            while (currentRotation < -180f) currentRotation += 360f;
-
-            // If rotation is off by more than 2 degrees, correct it
-            if (Mathf.Abs(currentRotation) > 2f)
-            {
-                // Use the shorter rotation path
-                float rotationDiff = -currentRotation;
-                if (rotationDiff > 180f) rotationDiff -= 360f;
-                if (rotationDiff < -180f) rotationDiff += 360f;
-
-                // Apply rotation correction smoothly
-                float correction = rotationDiff * rotationCorrectionSpeed * Time.fixedDeltaTime;
-                float newRotation = currentRotation + correction;
-                rb.MoveRotation(newRotation);
-            }
-            else if (Mathf.Abs(currentRotation) > 0.1f)
-            {
-                // Snap to 0 if very close
-                rb.rotation = 0f;
-            }
-        }
-    }
 
     private void CreateCollisionParticleSystem()
     {
@@ -186,6 +152,25 @@ public class DragSpriteRigid : MonoBehaviour
             return;
         }
 
+        // Create spring joint for dragging
+        if (!springJoint)
+        {
+            GameObject obj = new GameObject("Rigidbody2D dragger");
+            Rigidbody2D body = obj.AddComponent<Rigidbody2D>();
+            this.springJoint = obj.AddComponent<SpringJoint2D>();
+            body.isKinematic = true;
+        }
+
+        springJoint.transform.position = hit.point;
+        springJoint.anchor = Vector2.zero;
+        springJoint.connectedAnchor = hit.transform.InverseTransformPoint(hit.point);
+        springJoint.dampingRatio = this.dampingRatio;
+        springJoint.frequency = this.frequency;
+        springJoint.enableCollision = false;
+        springJoint.connectedBody = hit.rigidbody;
+        springJoint.distance = 0.2f;
+        springJoint.autoConfigureDistance = false;
+
         StartCoroutine(DragObject());
     }
 
@@ -228,70 +213,25 @@ public class DragSpriteRigid : MonoBehaviour
         // Set isBeingDragged immediately to prevent issues
         isBeingDragged = true;
         
-        if (rb == null)
+        if (springJoint == null || springJoint.connectedBody == null)
         {
             isBeingDragged = false;
             yield break;
         }
 
-        float oldDrag = rb.drag;
-        float oldAngularDrag = rb.angularDrag;
-        bool wasKinematic = rb.isKinematic;
-        float oldGravityScale = rb.gravityScale;
+        float oldDrag = springJoint.connectedBody.drag;
+        float oldAngularDrag = springJoint.connectedBody.angularDrag;
         
-        // Set drag to 0 during dragging for free movement
-        rb.drag = 0f;
-        rb.angularDrag = angularDrag;
-        // Temporarily disable gravity for smoother dragging
-        rb.gravityScale = 0f;
-
-        // Lock rotation during drag if enabled
-        if (lockRotationDuringDrag)
-        {
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.rotation = 0f; // Ensure it starts upright
-        }
-        else
-        {
-            // Ensure no position constraints during drag
-            rb.constraints = RigidbodyConstraints2D.None;
-        }
+        springJoint.connectedBody.drag = drag;
+        springJoint.connectedBody.angularDrag = angularDrag;
 
         // Enter ragdoll mode - enable floating animation
         EnterRagdollMode();
 
-        // Initialize previous mouse position and offset
-        Vector2 initialMousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 offset = (Vector2)transform.position - initialMousePos;
-        previousMousePosition = initialMousePos;
-
         while (Input.GetMouseButton(0))
         {
-            Vector2 currentMousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 targetPosition = currentMousePos + offset;
-            
-            // Calculate velocity based on mouse movement for throw effect
-            Vector2 mouseDelta = currentMousePos - previousMousePosition;
-            Vector2 throwVelocity = mouseDelta * throwSensitivity;
-            
-            // Also calculate follow velocity to keep object near mouse
-            Vector2 direction = targetPosition - (Vector2)transform.position;
-            Vector2 followVelocity = direction * throwSensitivity * 2f; // More responsive following
-            
-            // Combine both velocities, prioritizing follow
-            Vector2 targetVelocity = followVelocity + throwVelocity * 0.5f;
-            
-            // Clamp velocity to max throw velocity
-            if (targetVelocity.magnitude > maxThrowVelocity)
-            {
-                targetVelocity = targetVelocity.normalized * maxThrowVelocity;
-            }
-            
-            // Apply velocity directly to rigidbody
-            rb.velocity = targetVelocity;
-            
-            // Update previous mouse position for throw calculation
-            previousMousePosition = currentMousePos;
+            Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            springJoint.transform.position = mousePos;
             
             // Ensure floating animation stays active during drag
             if (animator != null && !animator.GetBool("isFloating"))
@@ -300,45 +240,18 @@ public class DragSpriteRigid : MonoBehaviour
                 animator.SetBool("isDancing", false);
             }
             
-            // Keep rotation locked during drag
-            if (lockRotationDuringDrag)
-            {
-                rb.rotation = 0f;
-            }
-            
             yield return null;
         }
 
-        // Restore drag values and gravity
-        rb.drag = oldDrag;
-        rb.angularDrag = oldAngularDrag;
-        rb.gravityScale = oldGravityScale;
-
-        // Restore original constraints, but ensure X and Y position are not frozen
-        if (lockRotationDuringDrag)
+        // Restore drag values
+        if (springJoint.connectedBody)
         {
-            // Only restore rotation constraint, keep position free
-            RigidbodyConstraints2D newConstraints = originalConstraints;
-            // Remove any position constraints (X or Y freeze)
-            newConstraints &= ~RigidbodyConstraints2D.FreezePositionX;
-            newConstraints &= ~RigidbodyConstraints2D.FreezePositionY;
-            // Keep rotation constraint from original
-            if ((originalConstraints & RigidbodyConstraints2D.FreezeRotation) != 0)
-            {
-                newConstraints |= RigidbodyConstraints2D.FreezeRotation;
-            }
-            rb.constraints = newConstraints;
-        }
-        else
-        {
-            // If not locking rotation during drag, just restore original constraints
-            rb.constraints = originalConstraints;
+            springJoint.connectedBody.drag = oldDrag;
+            springJoint.connectedBody.angularDrag = oldAngularDrag;
+            springJoint.connectedBody = null;
         }
 
         isBeingDragged = false;
-        
-        // Start rotation correction when dropped
-        //StartRotationCorrection();
         
         // Resume animation after a delay
         if (resumeAnimationCoroutine != null)
@@ -362,11 +275,6 @@ public class DragSpriteRigid : MonoBehaviour
                
             }
 
-            // Start rotation correction after collision
-            if (rb != null && !isBeingDragged)
-            {
-                StartRotationCorrection();
-            }
 
             // Resume animation after collision
             if (!isBeingDragged)
@@ -454,57 +362,4 @@ public class DragSpriteRigid : MonoBehaviour
         }
     }
 
-    private void StartRotationCorrection()
-    {
-        // Stop any existing rotation correction
-        if (rotationCorrectionCoroutine != null)
-        {
-            StopCoroutine(rotationCorrectionCoroutine);
-        }
-        rotationCorrectionCoroutine = StartCoroutine(CorrectRotation());
-    }
-
-    private IEnumerator CorrectRotation()
-    {
-        if (rb == null) yield break;
-
-        // Target rotation is 0 (upright)
-        float targetRotation = 0f;
-        float currentRotation = rb.rotation;
-
-        // Normalize rotation to -180 to 180 range
-        while (currentRotation > 180f) currentRotation -= 360f;
-        while (currentRotation < -180f) currentRotation += 360f;
-
-        // If rotation is close to 0, we're done
-        if (Mathf.Abs(currentRotation) < 1f)
-        {
-            rb.rotation = 0f;
-            yield break;
-        }
-
-        // Smoothly rotate to target
-        while (Mathf.Abs(currentRotation - targetRotation) > 0.5f)
-        {
-            currentRotation = rb.rotation;
-            // Normalize rotation to -180 to 180 range
-            while (currentRotation > 180f) currentRotation -= 360f;
-            while (currentRotation < -180f) currentRotation += 360f;
-
-            // Use the shorter rotation path
-            float rotationDiff = targetRotation - currentRotation;
-            if (rotationDiff > 180f) rotationDiff -= 360f;
-            if (rotationDiff < -180f) rotationDiff += 360f;
-
-            // Apply rotation correction
-            float newRotation = currentRotation + rotationDiff * rotationCorrectionSpeed * Time.fixedDeltaTime;
-            rb.MoveRotation(newRotation);
-
-            yield return new WaitForFixedUpdate();
-        }
-
-        // Snap to final rotation
-        rb.rotation = 0f;
-        rotationCorrectionCoroutine = null;
-    }
 }
