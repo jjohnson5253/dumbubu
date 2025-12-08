@@ -327,39 +327,14 @@ public class DragSpriteRigid : MonoBehaviour
             yield break;
         }
 
-        float stillTime = 0f;
-        float maxWaitTime = 10f; // Maximum time to wait (prevent infinite waiting)
-        float totalWaitTime = 0f;
-
-        // Wait until character has been still for the required time
-        while (stillTime < stillTimeBeforeGetUp && totalWaitTime < maxWaitTime)
+        // Wait until character stops moving
+        while (!IsStill())
         {
-            if (IsStill())
-            {
-                stillTime += Time.deltaTime;
-            }
-            else
-            {
-                // Reset still time if character starts moving
-                stillTime = 0f;
-            }
-            
-            totalWaitTime += Time.deltaTime;
             yield return null;
         }
 
-        // Trigger get_up if character has been still long enough
-        if (stillTime >= stillTimeBeforeGetUp)
-        {
-       
-            yield return new WaitForSeconds(timeToResumeAnimation);
-            ExitRagdollMode();
-        }
-        else
-        {
-   
-            ExitRagdollMode();
-        }
+        // Immediately resume dancing animation when stopped
+        ExitRagdollMode();
     }
 
 }
