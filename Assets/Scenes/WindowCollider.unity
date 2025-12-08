@@ -1848,6 +1848,7 @@ MonoBehaviour:
   timeToResumeAnimation: 0.5
   stillTimeBeforeGetUp: 2
   maxVelocityForStill: 0.5
+  groundOffsetFromBottom: 5
   throwSensitivity: 15
   maxThrowVelocity: 20
 --- !u!114 &4586163393330704973
