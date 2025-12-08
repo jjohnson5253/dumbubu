@@ -85,12 +85,13 @@ public class MenuDisplay : MonoBehaviour
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
         
-        // Set child text to fill parent (moved up higher)
+        // Position points text above grenade button
         RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0, 0.5f);
-        textRect.anchorMax = new Vector2(1, 1);
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
+        textRect.anchorMin = new Vector2(0.5f, 0f);
+        textRect.anchorMax = new Vector2(0.5f, 0f);
+        textRect.pivot = new Vector2(0.5f, 0f);
+        textRect.anchoredPosition = new Vector2(0, 205); // Above grenade button
+        textRect.sizeDelta = new Vector2(250, 40);
         
         // Set text content
         uiText.text = $"Total: {points} points";
