@@ -19,7 +19,7 @@ public class DragSpriteRigid : MonoBehaviour
     public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
     public float stillTimeBeforeGetUp = 2f; // Time character must be still before getting up
     public float maxVelocityForStill = 0.5f; // Maximum velocity to consider character "still"
-    public float groundOffsetFromBottom = 1f; // How far from bottom of screen to consider "on ground"
+    public float groundOffsetFromBottom = 5f; // How far from bottom of screen to consider "on ground"
 
     [Header("Throw Settings")]
     public float throwSensitivity = 15f; // How responsive the throw is (higher = more responsive)
