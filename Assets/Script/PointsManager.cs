@@ -151,48 +151,47 @@ public class PointsManager : MonoBehaviour
             {
                 Debug.Log($"Dev override enabled! Points set to: {devOverridePoints}");
             }
-            OnPointsChanged?.Invoke(currentPoints);
-            return;
         }
-        
-        if (SteamCloudSaveManager.Instance == null) 
+        else if (SteamCloudSaveManager.Instance == null) 
         {
             Debug.LogWarning("SteamCloudSaveManager not found. Starting with 0 points.");
-            return;
+            currentPoints = 0;
+        }
+        else
+        {
+            try
+            {
+                string jsonData = SteamCloudSaveManager.Instance.LoadFromSteamCloud();
+                
+                if (!string.IsNullOrEmpty(jsonData))
+                {
+                    saveData = JsonUtility.FromJson<SaveData>(jsonData);
+                    currentPoints = saveData.points;
+                    
+                    if (showPointsInConsole)
+                    {
+                        Debug.Log($"Game loaded! Points: {currentPoints} (Last saved: {saveData.lastSaved})");
+                    }
+                }
+                else
+                {
+                    // No save data found, start fresh
+                    if (showPointsInConsole)
+                    {
+                        Debug.Log("No save data found. Starting with 0 points.");
+                    }
+                    currentPoints = 0;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error loading game data: {e.Message}");
+                currentPoints = 0;
+            }
         }
         
-        try
-        {
-            string jsonData = SteamCloudSaveManager.Instance.LoadFromSteamCloud();
-            
-            if (!string.IsNullOrEmpty(jsonData))
-            {
-                saveData = JsonUtility.FromJson<SaveData>(jsonData);
-                currentPoints = saveData.points;
-                
-                if (showPointsInConsole)
-                {
-                    Debug.Log($"Game loaded! Points: {currentPoints} (Last saved: {saveData.lastSaved})");
-                }
-                
-                OnPointsChanged?.Invoke(currentPoints);
-            }
-            else
-            {
-                // No save data found, start fresh
-                if (showPointsInConsole)
-                {
-                    Debug.Log("No save data found. Starting with 0 points.");
-                }
-                currentPoints = 0;
-                OnPointsChanged?.Invoke(currentPoints);
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error loading game data: {e.Message}");
-            currentPoints = 0;
-            OnPointsChanged?.Invoke(currentPoints);
+        // Notify listeners once at the end
+        OnPointsChanged?.Invoke(currentPoints);
         }
     }
     
