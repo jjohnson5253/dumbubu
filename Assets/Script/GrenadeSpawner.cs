@@ -17,7 +17,7 @@ public class GrenadeSpawner : MonoBehaviour
 
     private void Update()
     {
-        // Check for right click (or configured key) and if grenade mode is enabled
+        // Check for configured spawn key and if grenade mode is enabled
         if (Input.GetKeyDown(spawnKey) && MenuDisplay.IsGrenadeModeEnabled())
         {
             SpawnGrenade();
