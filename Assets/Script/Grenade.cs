@@ -113,8 +113,34 @@ public class Grenade : MonoBehaviour
             }
         }
 
-        // Destroy the grenade after a short delay to let particles show
-        Destroy(gameObject, 1f);
+        // Hide the grenade immediately but keep particles visible
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = false;
+        }
+        
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+
+        // Disable rigidbody to stop it from falling
+        if (rb != null)
+        {
+            rb.simulated = false;
+        }
+
+        // Detach particle system so it doesn't get destroyed with the grenade
+        if (explosionParticleSystem != null)
+        {
+            explosionParticleSystem.transform.SetParent(null);
+            Destroy(explosionParticleSystem.gameObject, 1f);
+        }
+
+        // Destroy the grenade immediately now that particles are detached
+        Destroy(gameObject);
     }
 
     // Visualize explosion radius in editor
