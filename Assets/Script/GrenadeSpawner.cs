@@ -8,11 +8,11 @@ public class GrenadeSpawner : MonoBehaviour
     [Header("Input Settings")]
     public KeyCode spawnKey = KeyCode.Mouse1; // Right mouse button
     
-    private Camera camera;
+    private Camera mainCamera;
 
     private void Start()
     {
-        camera = Camera.main;
+        mainCamera = Camera.main;
     }
 
     private void Update()
@@ -39,7 +39,7 @@ public class GrenadeSpawner : MonoBehaviour
         }
 
         // Get mouse position in world space
-        Vector3 mouseWorldPos = camera.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPos.z = 0; // Ensure it's at z=0 for 2D
 
         // don't spawn grenade if clicking rigid body (likely character). 
