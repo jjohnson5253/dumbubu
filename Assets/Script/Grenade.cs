@@ -13,14 +13,14 @@ public class Grenade : MonoBehaviour
     public float drag = 0.5f;
     public float angularDrag = 0.5f;
 
-    private Camera camera;
+    private Camera mainCamera;
     private ParticleSystem explosionParticleSystem;
     private Rigidbody2D rb;
     private float timeSpawned;
 
     private void Awake()
     {
-        camera = Camera.main;
+        mainCamera = Camera.main;
         rb = GetComponent<Rigidbody2D>();
         
         // Set up rigidbody physics
