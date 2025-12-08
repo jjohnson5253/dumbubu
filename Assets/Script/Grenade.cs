@@ -113,25 +113,6 @@ public class Grenade : MonoBehaviour
             }
         }
 
-        // Hide the grenade immediately but keep particles visible
-        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.enabled = false;
-        }
-        
-        Collider2D collider = GetComponent<Collider2D>();
-        if (collider != null)
-        {
-            collider.enabled = false;
-        }
-
-        // Disable rigidbody to stop it from falling
-        if (rb != null)
-        {
-            rb.simulated = false;
-        }
-
         // Detach particle system so it doesn't get destroyed with the grenade
         if (explosionParticleSystem != null)
         {
