@@ -192,7 +192,6 @@ public class PointsManager : MonoBehaviour
         
         // Notify listeners once at the end
         OnPointsChanged?.Invoke(currentPoints);
-        }
     }
     
     private void OnApplicationPause(bool pauseStatus)
