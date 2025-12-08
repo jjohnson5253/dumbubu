@@ -7,6 +7,7 @@ public class MenuDisplay : MonoBehaviour
     private static GameObject canvasObject;
     private static Canvas canvas;
     private static GameObject currentMenuDisplay; // Track the current display
+    private static bool grenadeMode = false;
     
     /// <summary>
     /// Check if a menu display is currently showing
@@ -14,6 +15,23 @@ public class MenuDisplay : MonoBehaviour
     public static bool IsDisplaying()
     {
         return currentMenuDisplay != null;
+    }
+    
+    /// <summary>
+    /// Check if grenade mode is enabled
+    /// </summary>
+    public static bool IsGrenadeModeEnabled()
+    {
+        return grenadeMode;
+    }
+    
+    /// <summary>
+    /// Toggle grenade mode on/off
+    /// </summary>
+    public static void ToggleGrenadeMode()
+    {
+        grenadeMode = !grenadeMode;
+        Debug.Log($"Grenade mode: {(grenadeMode ? "ON" : "OFF")}");
     }
     
     /// <summary>
@@ -97,6 +115,9 @@ public class MenuDisplay : MonoBehaviour
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
         
+        // Create grenade mode toggle button
+        CreateGrenadeModeButton(textObj);
+        
         // Create buttons container
         CreateColorButtons(textObj);
         
@@ -109,6 +130,70 @@ public class MenuDisplay : MonoBehaviour
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
         clickHandler.Initialize();
+    }
+    
+    private static void CreateGrenadeModeButton(GameObject parent)
+    {
+        GameObject grenadeModeButtonObj = new GameObject("GrenadeModeButton");
+        grenadeModeButtonObj.transform.SetParent(parent.transform);
+        
+        RectTransform grenadeModeRect = grenadeModeButtonObj.AddComponent<RectTransform>();
+        grenadeModeRect.anchorMin = new Vector2(0.5f, 0f);
+        grenadeModeRect.anchorMax = new Vector2(0.5f, 0f);
+        grenadeModeRect.pivot = new Vector2(0.5f, 0f);
+        grenadeModeRect.anchoredPosition = new Vector2(0, 160); // Above color buttons
+        grenadeModeRect.sizeDelta = new Vector2(200, 35);
+        
+        // Add button background
+        Image buttonBg = grenadeModeButtonObj.AddComponent<Image>();
+        buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+        
+        // Add Button component
+        Button button = grenadeModeButtonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        
+        // Set button colors
+        ColorBlock colors = button.colors;
+        colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+        colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
+        button.colors = colors;
+        
+        // Add click listener to toggle grenade mode and update button appearance
+        button.onClick.AddListener(() => {
+            ToggleGrenadeMode();
+            // Update button color to reflect new state
+            buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+            colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+            colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
+            colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
+            button.colors = colors;
+            
+            // Update button text
+            Text buttonText = grenadeModeButtonObj.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+            }
+        });
+        
+        // Create button text
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(grenadeModeButtonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 16;
+        buttonText.color = Color.white;
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
     }
     
     private static void CreateColorButtons(GameObject parent)
