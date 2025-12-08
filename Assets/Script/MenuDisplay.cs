@@ -2,18 +2,37 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class FloatingPointsDisplay : MonoBehaviour
+public class MenuDisplay : MonoBehaviour
 {
     private static GameObject canvasObject;
     private static Canvas canvas;
-    private static GameObject currentPointsDisplay; // Track the current display
+    private static GameObject currentMenuDisplay; // Track the current display
+    private static bool grenadeMode = false;
+    private static int requiredPointsForGrenadeMode = 5;
     
     /// <summary>
-    /// Check if a points display is currently showing
+    /// Check if a menu display is currently showing
     /// </summary>
     public static bool IsDisplaying()
     {
-        return currentPointsDisplay != null;
+        return currentMenuDisplay != null;
+    }
+    
+    /// <summary>
+    /// Check if grenade mode is enabled
+    /// </summary>
+    public static bool IsGrenadeModeEnabled()
+    {
+        return grenadeMode;
+    }
+    
+    /// <summary>
+    /// Toggle grenade mode on/off
+    /// </summary>
+    public static void ToggleGrenadeMode()
+    {
+        grenadeMode = !grenadeMode;
+        Debug.Log($"Grenade mode: {(grenadeMode ? "ON" : "OFF")}");
     }
     
     /// <summary>
@@ -21,16 +40,16 @@ public class FloatingPointsDisplay : MonoBehaviour
     /// </summary>
     public static void ClearCurrentDisplay()
     {
-        currentPointsDisplay = null;
+        currentMenuDisplay = null;
     }
     
     /// <summary>
-    /// Show floating points display at a world position
+    /// Show menu display at a world position
     /// </summary>
-    public static void ShowPoints(Vector3 worldPosition, int points)
+    public static void ShowMenu(Vector3 worldPosition, int points)
     {
         // Don't create a new display if one already exists
-        if (currentPointsDisplay != null)
+        if (currentMenuDisplay != null)
         {
             return;
         }
@@ -41,10 +60,10 @@ public class FloatingPointsDisplay : MonoBehaviour
             CreateCanvas();
         }
         
-        // Create the floating text container
-        GameObject textObj = new GameObject("FloatingPoints");
+        // Create the menu container
+        GameObject textObj = new GameObject("MenuDisplay");
         textObj.transform.SetParent(canvas.transform);
-        currentPointsDisplay = textObj; // Store reference
+        currentMenuDisplay = textObj; // Store reference
         
         // Add grey background box
         Image background = textObj.AddComponent<Image>();
@@ -67,17 +86,18 @@ public class FloatingPointsDisplay : MonoBehaviour
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(2, -2);
         
-        // Set child text to fill parent (moved up higher)
+        // Position points text above grenade button
         RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0, 0.5f);
-        textRect.anchorMax = new Vector2(1, 1);
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
+        textRect.anchorMin = new Vector2(0.5f, 0f);
+        textRect.anchorMax = new Vector2(0.5f, 0f);
+        textRect.pivot = new Vector2(0.5f, 0f);
+        textRect.anchoredPosition = new Vector2(0, 205); // Above grenade button
+        textRect.sizeDelta = new Vector2(250, 40);
         
         // Set text content
         uiText.text = $"Total: {points} points";
         
-        Debug.Log($"Showing floating points: {points}");
+        Debug.Log($"Showing points: {points}");
         
         // Position and size the container box
         RectTransform rectTransform = textObj.GetComponent<RectTransform>();
@@ -88,7 +108,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.55f);
         
         // Set size
-        rectTransform.sizeDelta = new Vector2(300, 220); // Increased height for buttons
+        rectTransform.sizeDelta = new Vector2(300, 260); // Increased height for grenade button
         
         // Convert world position to screen position and set anchored position
         Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
@@ -96,6 +116,9 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Reset scale to ensure it's not affected by parent scaling
         rectTransform.localScale = Vector3.one;
+        
+        // Create grenade mode toggle button
+        CreateGrenadeModeButton(textObj);
         
         // Create buttons container
         CreateColorButtons(textObj);
@@ -109,6 +132,75 @@ public class FloatingPointsDisplay : MonoBehaviour
         // Add the click-to-dismiss component
         ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
         clickHandler.Initialize();
+    }
+    
+    private static void CreateGrenadeModeButton(GameObject parent)
+    {
+        GameObject grenadeModeButtonObj = new GameObject("GrenadeModeButton");
+        grenadeModeButtonObj.transform.SetParent(parent.transform);
+        
+        RectTransform grenadeModeRect = grenadeModeButtonObj.AddComponent<RectTransform>();
+        grenadeModeRect.anchorMin = new Vector2(0.5f, 0f);
+        grenadeModeRect.anchorMax = new Vector2(0.5f, 0f);
+        grenadeModeRect.pivot = new Vector2(0.5f, 0f);
+        grenadeModeRect.anchoredPosition = new Vector2(0, 160); // Above color buttons
+        grenadeModeRect.sizeDelta = new Vector2(200, 35);
+        
+        // Add button background
+        Image buttonBg = grenadeModeButtonObj.AddComponent<Image>();
+        buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+        
+        // Check if grenade mode is available
+        bool isGrenadeModeAvailable = PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= requiredPointsForGrenadeMode;
+        
+        // Add Button component
+        Button button = grenadeModeButtonObj.AddComponent<Button>();
+        button.targetGraphic = buttonBg;
+        button.interactable = isGrenadeModeAvailable;
+        
+        // Set button colors
+        ColorBlock colors = button.colors;
+        colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+        colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
+        colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
+        colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        button.colors = colors;
+        
+        // Add click listener to toggle grenade mode and update button appearance
+        button.onClick.AddListener(() => {
+            ToggleGrenadeMode();
+            // Update button color to reflect new state
+            buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+            colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
+            colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
+            colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
+            button.colors = colors;
+            
+            // Update button text
+            Text buttonText = grenadeModeButtonObj.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+            }
+        });
+        
+        // Create button text
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(grenadeModeButtonObj.transform);
+        
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+        
+        Text buttonText = textObj.AddComponent<Text>();
+        buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        buttonText.fontSize = 16;
+        buttonText.color = isGrenadeModeAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+        buttonText.alignment = TextAnchor.MiddleCenter;
+        buttonText.fontStyle = FontStyle.Bold;
     }
     
     private static void CreateColorButtons(GameObject parent)
@@ -178,9 +270,9 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         // Add click listener to close the menu
         button.onClick.AddListener(() => {
-            if (currentPointsDisplay != null)
+            if (currentMenuDisplay != null)
             {
-                Destroy(currentPointsDisplay);
+                Destroy(currentMenuDisplay);
             }
         });
         
@@ -315,7 +407,7 @@ public class FloatingPointsDisplay : MonoBehaviour
     
     private static void CreateCanvas()
     {
-        canvasObject = new GameObject("FloatingPointsCanvas");
+        canvasObject = new GameObject("MenuCanvas");
         canvas = canvasObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 1000; // Make sure it's on top
@@ -324,7 +416,7 @@ public class FloatingPointsDisplay : MonoBehaviour
         
         DontDestroyOnLoad(canvasObject);
         
-        Debug.Log("FloatingPointsCanvas created!");
+        Debug.Log("MenuCanvas created!");
     }
 }
 
@@ -390,7 +482,7 @@ public class ClickToDismiss : MonoBehaviour
     private void OnDestroy()
     {
         // Clear the reference when destroyed
-        FloatingPointsDisplay.ClearCurrentDisplay();
+        MenuDisplay.ClearCurrentDisplay();
     }
 }
 
