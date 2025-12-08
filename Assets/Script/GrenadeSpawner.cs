@@ -41,6 +41,14 @@ public class GrenadeSpawner : MonoBehaviour
         // Get mouse position in world space
         Vector3 mouseWorldPos = camera.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPos.z = 0; // Ensure it's at z=0 for 2D
+        
+        // Clicked on something with a rigidbody (likely the character), don't spawn grenade
+        RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero);
+        if (hit.collider != null && hit.rigidbody != null)
+        {
+            
+            return;
+        }
 
         // Instantiate the grenade at mouse position
         Instantiate(grenadePrefab, mouseWorldPos, Quaternion.identity);

@@ -160,7 +160,7 @@ public class DragSpriteRigid : MonoBehaviour
 
     void Update()
     {
-        // Check for right click explosion
+        // Check for right click to show menu
         if (Input.GetMouseButtonDown(1))
         {
             ShowMenu();
@@ -169,6 +169,12 @@ public class DragSpriteRigid : MonoBehaviour
 
         // Only check for drag start on mouse down, not every frame
         if (!Input.GetMouseButtonDown(0))
+        {
+            return;
+        }
+
+        // Don't allow dragging if grenade mode is enabled
+        if (MenuDisplay.IsGrenadeModeEnabled())
         {
             return;
         }
