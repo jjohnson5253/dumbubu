@@ -1846,9 +1846,6 @@ MonoBehaviour:
   explosionRadius: 0.5
   doubleClickTime: 0.3
   timeToResumeAnimation: 0.5
-  rotationCorrectionSpeed: 10
-  lockRotationDuringDrag: 1
-  continuousRotationCorrection: 1
   stillTimeBeforeGetUp: 2
   maxVelocityForStill: 0.5
   throwSensitivity: 15
