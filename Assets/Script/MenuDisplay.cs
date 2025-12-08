@@ -8,6 +8,7 @@ public class MenuDisplay : MonoBehaviour
     private static Canvas canvas;
     private static GameObject currentMenuDisplay; // Track the current display
     private static bool grenadeMode = false;
+    private static int requiredPointsForGrenadeMode = 5;
     
     /// <summary>
     /// Check if a menu display is currently showing
@@ -149,8 +150,8 @@ public class MenuDisplay : MonoBehaviour
         Image buttonBg = grenadeModeButtonObj.AddComponent<Image>();
         buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
         
-        // Check if grenade mode is available (need 100 points)
-        bool isGrenadeModeAvailable = PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= 100;
+        // Check if grenade mode is available
+        bool isGrenadeModeAvailable = PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= requiredPointsForGrenadeMode;
         
         // Add Button component
         Button button = grenadeModeButtonObj.AddComponent<Button>();
