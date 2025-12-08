@@ -273,7 +273,16 @@ public class DragSpriteRigid : MonoBehaviour
             if (PointsManager.Instance != null)
             {
                 PointsManager.Instance.AddPoints();
-               
+            }
+
+            // Restart animation coroutine after collision (if not being dragged)
+            if (!isBeingDragged)
+            {
+                if (resumeAnimationCoroutine != null)
+                {
+                    StopCoroutine(resumeAnimationCoroutine);
+                }
+                resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
             }
         }
     }
