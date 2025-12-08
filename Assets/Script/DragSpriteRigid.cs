@@ -171,12 +171,6 @@ public class DragSpriteRigid : MonoBehaviour
             return;
         }
 
-        // Don't allow dragging if grenade mode is enabled
-        if (MenuDisplay.IsGrenadeModeEnabled())
-        {
-            return;
-        }
-
         RaycastHit2D hit = Physics2D.Raycast(
                 mainCamera.ScreenToWorldPoint(Input.mousePosition),
                 Vector2.zero);
