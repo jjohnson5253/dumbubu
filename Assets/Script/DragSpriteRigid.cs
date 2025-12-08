@@ -18,7 +18,7 @@ public class DragSpriteRigid : MonoBehaviour
     [Header("Animation Settings")]
     public float timeToResumeAnimation = 0.5f; // Time after collision before resuming animation
     public float stillTimeBeforeGetUp = 2f; // Time character must be still before getting up
-    public float maxVelocityForStill = 0.5f; // Maximum velocity to consider character "still"
+    public float maxVelocityForStill = 1f; // Maximum velocity to consider character "still"
 
     [Header("Throw Settings")]
     public float throwSensitivity = 15f; // How responsive the throw is (higher = more responsive)
@@ -307,7 +307,6 @@ public class DragSpriteRigid : MonoBehaviour
         {
             animator.SetBool("isFloating", false);
             animator.SetBool("isDancing", true);
-   
         }
     }
 
