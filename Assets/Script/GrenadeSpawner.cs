@@ -32,6 +32,12 @@ public class GrenadeSpawner : MonoBehaviour
             return;
         }
 
+        // Don't spawn if clicking on the menu display
+        if (MenuDisplay.IsDisplaying())
+        {
+            return;
+        }
+
         // Get mouse position in world space
         Vector3 mouseWorldPos = camera.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPos.z = 0; // Ensure it's at z=0 for 2D
