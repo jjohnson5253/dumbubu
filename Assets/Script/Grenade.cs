@@ -31,6 +31,19 @@ public class Grenade : MonoBehaviour
             rb.angularDrag = angularDrag;
         }
         
+        // Ignore collision with the character (Dumbubu)
+        GameObject dumbubu = GameObject.Find("Dumbubu");
+        if (dumbubu != null)
+        {
+            Collider2D grenadeCollider = GetComponent<Collider2D>();
+            Collider2D dumbubuCollider = dumbubu.GetComponent<Collider2D>();
+            
+            if (grenadeCollider != null && dumbubuCollider != null)
+            {
+                Physics2D.IgnoreCollision(grenadeCollider, dumbubuCollider);
+            }
+        }
+        
         CreateExplosionParticleSystem();
         timeSpawned = Time.time;
     }
