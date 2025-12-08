@@ -1321,7 +1321,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: e61dcf40be102974b96e655b37af4501, type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e61dcf40be102974b96e655b37af4501, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2301,7 +2301,7 @@ Transform:
   - {fileID: 8355586343638536924}
   - {fileID: 2371113763281666382}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 179.01, z: 0}
 --- !u!61 &4586163393330704969
 BoxCollider2D:
