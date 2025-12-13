@@ -36,6 +36,15 @@ public class MenuDisplay : MonoBehaviour
     }
     
     /// <summary>
+    /// Disable grenade mode
+    /// </summary>
+    public static void DisableGrenadeMode()
+    {
+        grenadeMode = false;
+        Debug.Log("Grenade mode: OFF (disabled by escape key)");
+    }
+    
+    /// <summary>
     /// Clear the current display reference (called when display is destroyed)
     /// </summary>
     public static void ClearCurrentDisplay()
