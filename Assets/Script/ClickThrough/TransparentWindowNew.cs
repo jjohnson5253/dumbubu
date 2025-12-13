@@ -92,9 +92,25 @@ public class TransparentWindowNew : MonoBehaviour
 
     void Update ()
     {
+        // Check for escape key to exit grenade mode
+        if (Input.GetKeyDown(KeyCode.Escape) && MenuDisplay.IsGrenadeModeEnabled())
+        {
+            MenuDisplay.DisableGrenadeMode();
+        }
+        
         // If our mouse is overlapping an object
         //RaycastHit hit = new RaycastHit();
-        clickThrough = !HitTestByRaycast();
+        bool shouldClickThrough = !HitTestByRaycast();
+        
+        // Disable click-through when grenade mode is enabled
+        if (MenuDisplay.IsGrenadeModeEnabled())
+        {
+            clickThrough = false;
+        }
+        else
+        {
+            clickThrough = shouldClickThrough;
+        }
 
         if (clickThrough != prevClickThrough) {
             if (clickThrough) {
