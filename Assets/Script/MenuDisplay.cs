@@ -8,7 +8,7 @@ public class MenuDisplay : MonoBehaviour
     private static Canvas canvas;
     private static GameObject currentMenuDisplay; // Track the current display
     private static bool grenadeMode = false;
-    private static int requiredPointsForGrenadeMode = 100;
+    private static int requiredPointsForGrenadeMode = 500;
     
     /// <summary>
     /// Check if a menu display is currently showing
