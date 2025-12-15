@@ -6,8 +6,8 @@ public class Grenade : MonoBehaviour
     [Header("Explosion Settings")]
     public float explosionForce = 10f;
     public float explosionRadius = 2f;
-    public float fuseTime = 2f;
-
+    public float fuseTime = 2f;    
+    public float upwardBias = 0.5f; // How much upward force to add (0 = none, 1 = equal to horizontal)
     [Header("Physics Settings")]
     public float gravityScale = 1f;
     public float drag = 0.5f;
@@ -112,6 +112,10 @@ public class Grenade : MonoBehaviour
                 // Calculate direction from explosion center to object
                 Vector2 objectCenter = targetRb.position;
                 Vector2 explosionDirection = (objectCenter - explosionCenter).normalized;
+                
+                // Add upward bias to make objects fly up more
+                explosionDirection.y += upwardBias;
+                explosionDirection.Normalize();
 
                 // Calculate distance-based force falloff
                 float distance = Vector2.Distance(explosionCenter, objectCenter);
