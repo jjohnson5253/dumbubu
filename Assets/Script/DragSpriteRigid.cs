@@ -128,19 +128,17 @@ public class DragSpriteRigid : MonoBehaviour
         // Auto-trigger floating animation when moving fast (e.g., from explosions)
         if (animator != null && rb != null && !isBeingDragged)
         {
-            // If moving fast enough, enter floating mode
-            if (rb.velocity.magnitude > maxVelocityForStill)
+            // If moving fast enough and not already floating, enter floating mode
+            if (rb.velocity.magnitude > maxVelocityForStill && !animator.GetBool("isFloating"))
             {
-                if (!animator.GetBool("isFloating"))
+                EnterRagdollMode();
+                
+                // Restart the exit floating animation coroutine
+                if (resumeAnimationCoroutine != null)
                 {
-                    EnterRagdollMode();
-                    
-                    // Start the exit floating animation coroutine if not already running
-                    if (resumeAnimationCoroutine == null)
-                    {
-                        resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
-                    }
+                    StopCoroutine(resumeAnimationCoroutine);
                 }
+                resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
             }
         }
         
