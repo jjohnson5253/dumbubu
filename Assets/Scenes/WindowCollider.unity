@@ -723,7 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   messageText: {fileID: 1536501394}
   messageDisplayTime: 3
-  yOffsetFromDumbubu: 1.5
+  yOffsetFromDumbubu: 2
 --- !u!114 &950538697
 MonoBehaviour:
   m_ObjectHideFlags: 0
