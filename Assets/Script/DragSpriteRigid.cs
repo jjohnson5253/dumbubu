@@ -125,6 +125,23 @@ public class DragSpriteRigid : MonoBehaviour
 
     void Update()
     {
+        // Auto-trigger floating animation when moving fast (e.g., from explosions)
+        if (animator != null && rb != null && !isBeingDragged)
+        {
+            // If moving fast enough and not already floating, enter floating mode
+            if (rb.velocity.magnitude > maxVelocityForStill && !animator.GetBool("isFloating"))
+            {
+                EnterRagdollMode();
+                
+                // Restart the exit floating animation coroutine
+                if (resumeAnimationCoroutine != null)
+                {
+                    StopCoroutine(resumeAnimationCoroutine);
+                }
+                resumeAnimationCoroutine = StartCoroutine(ExitFloatingAnimation());
+            }
+        }
+        
         // Check for right click to show menu
         if (Input.GetMouseButtonDown(1))
         {
@@ -266,8 +283,9 @@ public class DragSpriteRigid : MonoBehaviour
     {
         if (collision.relativeVelocity.magnitude > minCollisionVelocity)
         {
-            collisionParticleSystem.transform.position = collision.contacts[0].point;
-            collisionParticleSystem.Emit(10);
+            // uncomment for particle emititer system
+            //collisionParticleSystem.transform.position = collision.contacts[0].point;
+            //collisionParticleSystem.Emit(10);
 
             // Add points for collision and save to Steam Cloud
             if (PointsManager.Instance != null)
@@ -343,7 +361,7 @@ public class DragSpriteRigid : MonoBehaviour
         // Wait until character stops moving AND is on the ground
         while (!IsStill() || !IsOnGround())
         {
-            Debug.Log($"Waiting... Velocity: {rb.velocity.magnitude}, Y pos: {transform.position.y}, On ground: {IsOnGround()}");
+            //Debug.Log($"Waiting... Velocity: {rb.velocity.magnitude}, Y pos: {transform.position.y}, On ground: {IsOnGround()}");
             yield return null;
         }
 
