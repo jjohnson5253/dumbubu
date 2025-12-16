@@ -131,7 +131,8 @@ public class Grenade : MonoBehaviour
                 // Add points if this is Dumbubu
                 if (targetRb.gameObject.name == "Dumbubu" && PointsManager.Instance != null)
                 {
-                    PointsManager.Instance.AddPoints();
+                    // give more points for exploding Dumbubu
+                    PointsManager.Instance.AddPoints(10);
                 }
             }
         }
