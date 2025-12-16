@@ -492,6 +492,12 @@ public class ClickToDismiss : MonoBehaviour
     {
         // Clear the reference when destroyed
         MenuDisplay.ClearCurrentDisplay();
+        
+        // Show grenade mode message if grenade mode is active
+        if (MenuDisplay.IsGrenadeModeEnabled() && MessagesDisplay.Instance != null)
+        {
+            MessagesDisplay.Instance.ShowGrenadeMessage();
+        }
     }
 }
 
