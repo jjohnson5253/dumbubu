@@ -723,7 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   messageText: {fileID: 1536501394}
   messageDisplayTime: 4
-  yOffsetFromDumbubu: 2
+  yOffsetFromDumbubu: 1.5
 --- !u!114 &950538697
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1040,8 +1040,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 12
-  m_fontSizeBase: 12
+  m_fontSize: 14
+  m_fontSizeBase: 14
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1076,7 +1076,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -43.535843, y: 0, z: -47.01877, w: 0}
+  m_margin: {x: -75.61626, y: 0, z: -72.31302, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
