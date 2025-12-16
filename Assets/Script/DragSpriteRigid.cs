@@ -360,7 +360,7 @@ public class DragSpriteRigid : MonoBehaviour
         // Wait until character stops moving AND is on the ground
         while (!IsStill() || !IsOnGround())
         {
-            Debug.Log($"Waiting... Velocity: {rb.velocity.magnitude}, Y pos: {transform.position.y}, On ground: {IsOnGround()}");
+            //Debug.Log($"Waiting... Velocity: {rb.velocity.magnitude}, Y pos: {transform.position.y}, On ground: {IsOnGround()}");
             yield return null;
         }
 
