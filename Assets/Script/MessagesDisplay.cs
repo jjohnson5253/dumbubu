@@ -60,7 +60,7 @@ public class MessagesDisplay : MonoBehaviour
         
         if (dumbubu != null)
         {
-            ShowMessage("Click and drag to throw. Right click for menu");
+            ShowMessage("Click and drag to throw. Right click for menu.");
             hasShownStartMessage = true;
         }
     }
