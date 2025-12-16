@@ -1668,6 +1668,8 @@ GameObject:
   - component: {fileID: 4586163393330704972}
   - component: {fileID: 4586163393330704971}
   - component: {fileID: 4586163393330704973}
+  - component: {fileID: 4586163393330704974}
+  - component: {fileID: 4586163393330704975}
   m_Layer: 0
   m_Name: Dumbubu
   m_TagString: Untagged
@@ -1767,11 +1769,11 @@ BoxCollider2D:
   m_GameObject: {fileID: 3814130942722713842}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.5}
+  m_Offset: {x: -0.0030415803, y: 0.5}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1782,7 +1784,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.9, y: 1}
+  m_Size: {x: 0.6992494, y: 1}
   m_EdgeRadius: 0
 --- !u!50 &4586163393330704970
 Rigidbody2D:
@@ -1865,6 +1867,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   grenadePrefab: {fileID: 7261839456044001174, guid: 30f159e31d3544c25befe9774abeb56a, type: 3}
   spawnKey: 323
+--- !u!58 &4586163393330704974
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3814130942722713842}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.000000029806777, y: 0.39476585}
+  serializedVersion: 2
+  m_Radius: 0.4271202
+--- !u!70 &4586163393330704975
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3814130942722713842}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.0034054965, y: 0.39861044}
+  m_Size: {x: 0.9920503, y: 0.839848}
+  m_Direction: 1
 --- !u!1 &4646615612897294476
 GameObject:
   m_ObjectHideFlags: 0
