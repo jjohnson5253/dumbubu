@@ -283,8 +283,9 @@ public class DragSpriteRigid : MonoBehaviour
     {
         if (collision.relativeVelocity.magnitude > minCollisionVelocity)
         {
-            collisionParticleSystem.transform.position = collision.contacts[0].point;
-            collisionParticleSystem.Emit(10);
+            // uncomment for particle emititer system
+            //collisionParticleSystem.transform.position = collision.contacts[0].point;
+            //collisionParticleSystem.Emit(10);
 
             // Add points for collision and save to Steam Cloud
             if (PointsManager.Instance != null)
