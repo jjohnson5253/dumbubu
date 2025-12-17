@@ -53,16 +53,9 @@
 - Steam account (for testing Steam features)
 - Windows 10/11 (primary platform)
 
-### Getting Started (Developers)
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/desktop-pet.git
-
-# Open in Unity 2021.3.9f1 (exact version required)
-# Make sure Steam is running for testing save data
-# File->Build And Run
-```
+### Usage
+- `Add project from disk` in Unity Hub and select this directory
+- File->Build and Run
 
 <div align="center">
 
