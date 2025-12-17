@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-
-#pragma warning disable CS0618 // Disable obsolete warnings for compatibility mode rendering
+using UnityEngine.Rendering.RenderGraphModule;
 
 /*
  * Blit Renderer Feature                                                https://github.com/Cyanilux/URP_BlitRenderFeature
@@ -31,116 +30,85 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 //	[CreateAssetMenu(menuName = "Cyan/Blit")] 
 	public class Blit : ScriptableRendererFeature {
 
-		public class BlitPass : ScriptableRenderPass {
+		// Render Graph pass data
+		private class PassData {
+			public Material blitMaterial;
+			public int blitMaterialPassIndex;
+			public BlitSettings settings;
+			public TextureHandle source;
+			public TextureHandle destination;
+		}
 
-			public Material blitMaterial = null;
-			public FilterMode filterMode { get; set; }
+		public class BlitRenderGraphScriptablePass : ScriptableRenderPass {
+			private BlitSettings m_Settings;
+			private Material m_BlitMaterial;
+			private string m_PassName;
 
-			private BlitSettings settings;
-
-			private RTHandle source { get; set; }
-			private RTHandle destination { get; set; }
-
-			RTHandle m_TemporaryColorTexture;
-			RTHandle m_DestinationTexture;
-			string m_ProfilerTag;
-
-#if !UNITY_2020_2_OR_NEWER // v8
-			private ScriptableRenderer renderer;
-#endif
-
-			public BlitPass(RenderPassEvent renderPassEvent, BlitSettings settings, string tag) {
-				this.renderPassEvent = renderPassEvent;
-				this.settings = settings;
-				blitMaterial = settings.blitMaterial;
-				m_ProfilerTag = tag;
+			public BlitRenderGraphScriptablePass(BlitSettings settings, Material blitMaterial, string passName) {
+				m_Settings = settings;
+				m_BlitMaterial = blitMaterial;
+				m_PassName = passName;
+				renderPassEvent = settings.Event;
 			}
 
-			public void Setup(ScriptableRenderer renderer) {
-#if UNITY_2020_2_OR_NEWER // v10+
-				if (settings.requireDepthNormals)
-					ConfigureInput(ScriptableRenderPassInput.Normal);
-					//ConfigureInput(ScriptableRenderPassInput.Depth);
-					//ConfigureInput(ScriptableRenderPassInput.Normal);
-#else // v8
-				this.renderer = renderer;
-#endif
-			}
+			public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+				UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+				UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
 
-			public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
-				CommandBuffer cmd = CommandBufferPool.Get(m_ProfilerTag);
-				RenderTextureDescriptor opaqueDesc = renderingData.cameraData.cameraTargetDescriptor;
-				opaqueDesc.depthBufferBits = 0;
-
-				// Set Source / Destination
-#if UNITY_2020_2_OR_NEWER // v10+
-				var renderer = renderingData.cameraData.renderer;
-				
-#else // v8
-				// For older versions, cameraData.renderer is internal so can't be accessed. Will pass it through from AddRenderPasses instead
-				var renderer = this.renderer;
-#endif
-
-				// note : Seems this has to be done in here rather than in AddRenderPasses to work correctly in 2021.2+
-				if (settings.srcType == Target.CameraColor) {
-					
-					source = renderer.cameraColorTargetHandle;
-				} else if (settings.srcType == Target.TextureID) {
-					source = RTHandles.Alloc(settings.srcTextureId);
-				} else if (settings.srcType == Target.RenderTextureObject) {
-					source = RTHandles.Alloc(settings.srcTextureObject);
-				}
-
-				if (settings.dstType == Target.CameraColor) {
-					destination = renderer.cameraColorTargetHandle;
-				} else if (settings.dstType == Target.TextureID) {
-					destination = m_DestinationTexture;
-				} else if (settings.dstType == Target.RenderTextureObject) {
-					destination = RTHandles.Alloc(settings.dstTextureObject);
-				}
-
-				if (settings.setInverseViewMatrix) {
-					Shader.SetGlobalMatrix("_InverseView", renderingData.cameraData.camera.cameraToWorldMatrix);
-				}
-
-				if (settings.dstType == Target.TextureID) {
-					if (settings.overrideGraphicsFormat) {
-						opaqueDesc.graphicsFormat = settings.graphicsFormat;
-					}
-					// 像素游戏，强制使用Point过滤
-					RenderingUtils.ReAllocateIfNeeded(ref m_DestinationTexture, opaqueDesc, FilterMode.Point, name: settings.dstTextureId);
-				}
-
-				//Debug.Log($"src = {source},     dst = {destination} ");
-				// Can't read and write to same color target, use a TemporaryRT
-				if (source == destination || (settings.srcType == settings.dstType && settings.srcType == Target.CameraColor)) {
-					RenderingUtils.ReAllocateIfNeeded(ref m_TemporaryColorTexture, opaqueDesc, FilterMode.Point, name: "_TemporaryColorTexture");
-					Blitter.BlitCameraTexture(cmd, source, m_TemporaryColorTexture, blitMaterial, settings.blitMaterialPassIndex);
-					Blitter.BlitCameraTexture(cmd, m_TemporaryColorTexture, destination);
+				// Get source texture
+				TextureHandle sourceTexture;
+				if (m_Settings.srcType == Target.CameraColor) {
+					sourceTexture = resourceData.activeColorTexture;
+				} else if (m_Settings.srcType == Target.TextureID) {
+					sourceTexture = renderGraph.ImportTexture(RTHandles.Alloc(m_Settings.srcTextureId));
 				} else {
-					Blitter.BlitCameraTexture(cmd, source, destination, blitMaterial, settings.blitMaterialPassIndex);
+					sourceTexture = renderGraph.ImportTexture(RTHandles.Alloc(m_Settings.srcTextureObject));
 				}
 
-				context.ExecuteCommandBuffer(cmd);
-				CommandBufferPool.Release(cmd);
+				// Create or get destination texture
+				TextureHandle destinationTexture;
+				if (m_Settings.dstType == Target.CameraColor) {
+					destinationTexture = resourceData.activeColorTexture;
+				} else {
+					var desc = cameraData.cameraTargetDescriptor;
+					desc.depthBufferBits = 0;
+					if (m_Settings.overrideGraphicsFormat) {
+						desc.graphicsFormat = m_Settings.graphicsFormat;
+					}
+					
+					destinationTexture = UniversalRenderer.CreateRenderGraphTexture(
+						renderGraph, desc, m_Settings.dstTextureId, false, FilterMode.Point);
+				}
+
+				// Add render pass
+				using (var builder = renderGraph.AddRasterRenderPass<PassData>(m_PassName, out var passData)) {
+					passData.blitMaterial = m_BlitMaterial;
+					passData.blitMaterialPassIndex = m_Settings.blitMaterialPassIndex;
+					passData.settings = m_Settings;
+					
+					// Store texture handles for use in render function
+					passData.source = sourceTexture;
+					passData.destination = destinationTexture;
+					
+					// Declare texture usage for render graph dependency tracking
+					builder.UseTexture(sourceTexture, AccessFlags.Read);
+					builder.SetRenderAttachment(destinationTexture, 0, AccessFlags.Write);
+
+					builder.SetRenderFunc<PassData>((PassData data, RasterGraphContext context) => {
+						if (data.settings.setInverseViewMatrix) {
+							Shader.SetGlobalMatrix("_InverseView", cameraData.camera.cameraToWorldMatrix);
+						}
+
+						Blitter.BlitTexture(context.cmd, data.source, new Vector4(1, 1, 0, 0), 
+							data.blitMaterial, data.blitMaterialPassIndex);
+					});
+				}
 			}
 
-			public override void FrameCleanup(CommandBuffer cmd) {
-				// RTHandle cleanup is handled automatically by the system
-			}
-
-			public override void OnCameraCleanup(CommandBuffer cmd) {
-				// RTHandle cleanup
-				m_TemporaryColorTexture?.Release();
-				m_DestinationTexture?.Release();
-				
-				// Release dynamically allocated RTHandles
-				if (settings.srcType != Target.CameraColor) {
-					source?.Release();
-				}
-				if (settings.dstType != Target.CameraColor && settings.dstType != Target.TextureID) {
-					destination?.Release();
-				}
+			// Legacy method for compatibility mode (won't be used with render graph enabled)
+			[System.Obsolete]
+			public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+				// This method is not used when render graph is enabled
 			}
 		}
 
@@ -172,18 +140,10 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 		}
 
 		public BlitSettings settings = new BlitSettings();
-		public BlitPass blitPass;
 
 		public override void Create() {
 			var passIndex = settings.blitMaterial != null ? settings.blitMaterial.passCount - 1 : 1;
 			settings.blitMaterialPassIndex = Mathf.Clamp(settings.blitMaterialPassIndex, -1, passIndex);
-			blitPass = new BlitPass(settings.Event, settings, name);
-
-#if !UNITY_2021_2_OR_NEWER
-		if (settings.Event == RenderPassEvent.AfterRenderingPostProcessing) {
-			Debug.LogWarning("Note that the \"After Rendering Post Processing\"'s Color target doesn't seem to work? (or might work, but doesn't contain the post processing) :( -- Use \"After Rendering\" instead!");
-		}
-#endif
 
 			if (settings.graphicsFormat == UnityEngine.Experimental.Rendering.GraphicsFormat.None) {
 				settings.graphicsFormat = SystemInfo.GetGraphicsFormat(UnityEngine.Experimental.Rendering.DefaultFormat.LDR);
@@ -191,41 +151,14 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
-
 			if (settings.blitMaterial == null) {
 				Debug.LogWarningFormat("Missing Blit Material. {0} blit pass will not execute. Check for missing reference in the assigned renderer.", GetType().Name);
 				return;
 			}
 
-#if !UNITY_2021_2_OR_NEWER
-		// AfterRenderingPostProcessing event is fixed in 2021.2+ so this workaround is no longer required
-
-		if (settings.Event == RenderPassEvent.AfterRenderingPostProcessing) {
-		} else if (settings.Event == RenderPassEvent.AfterRendering && renderingData.postProcessingEnabled) {
-			// If event is AfterRendering, and src/dst is using CameraColor, switch to _AfterPostProcessTexture instead.
-			if (settings.srcType == Target.CameraColor) {
-				settings.srcType = Target.TextureID;
-				settings.srcTextureId = "_AfterPostProcessTexture";
-			}
-			if (settings.dstType == Target.CameraColor) {
-				settings.dstType = Target.TextureID;
-				settings.dstTextureId = "_AfterPostProcessTexture";
-			}
-		} else {
-			// If src/dst is using _AfterPostProcessTexture, switch back to CameraColor
-			if (settings.srcType == Target.TextureID && settings.srcTextureId == "_AfterPostProcessTexture") {
-				settings.srcType = Target.CameraColor;
-				settings.srcTextureId = "";
-			}
-			if (settings.dstType == Target.TextureID && settings.dstTextureId == "_AfterPostProcessTexture") {
-				settings.dstType = Target.CameraColor;
-				settings.dstTextureId = "";
-			}
-		}
-#endif
-
-			blitPass.Setup(renderer);
-			renderer.EnqueuePass(blitPass);
+			// In Unity 6 with Render Graph, we create a render graph pass and enqueue it
+			var pass = new BlitRenderGraphScriptablePass(settings, settings.blitMaterial, name);
+			renderer.EnqueuePass(pass);
 		}
 	}
 }
