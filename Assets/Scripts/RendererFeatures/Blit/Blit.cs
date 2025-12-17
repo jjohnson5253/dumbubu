@@ -2,6 +2,8 @@
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
+#pragma warning disable CS0618 // Disable obsolete warnings for compatibility mode rendering
+
 /*
  * Blit Renderer Feature                                                https://github.com/Cyanilux/URP_BlitRenderFeature
  * ------------------------------------------------------------------------------------------------------------------------
@@ -36,11 +38,11 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 
 			private BlitSettings settings;
 
-			private RenderTargetIdentifier source { get; set; }
-			private RenderTargetIdentifier destination { get; set; }
+			private RTHandle source { get; set; }
+			private RTHandle destination { get; set; }
 
-			RenderTargetHandle m_TemporaryColorTexture;
-			RenderTargetHandle m_DestinationTexture;
+			RTHandle m_TemporaryColorTexture;
+			RTHandle m_DestinationTexture;
 			string m_ProfilerTag;
 
 #if !UNITY_2020_2_OR_NEWER // v8
@@ -52,10 +54,6 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 				this.settings = settings;
 				blitMaterial = settings.blitMaterial;
 				m_ProfilerTag = tag;
-				m_TemporaryColorTexture.Init("_TemporaryColorTexture");
-				if (settings.dstType == Target.TextureID) {
-					m_DestinationTexture.Init(settings.dstTextureId);
-				}
 			}
 
 			public void Setup(ScriptableRenderer renderer) {
@@ -86,19 +84,19 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 				// note : Seems this has to be done in here rather than in AddRenderPasses to work correctly in 2021.2+
 				if (settings.srcType == Target.CameraColor) {
 					
-					source = renderer.cameraColorTarget;
+					source = renderer.cameraColorTargetHandle;
 				} else if (settings.srcType == Target.TextureID) {
-					source = new RenderTargetIdentifier(settings.srcTextureId);
+					source = RTHandles.Alloc(settings.srcTextureId);
 				} else if (settings.srcType == Target.RenderTextureObject) {
-					source = new RenderTargetIdentifier(settings.srcTextureObject);
+					source = RTHandles.Alloc(settings.srcTextureObject);
 				}
 
 				if (settings.dstType == Target.CameraColor) {
-					destination = renderer.cameraColorTarget;
+					destination = renderer.cameraColorTargetHandle;
 				} else if (settings.dstType == Target.TextureID) {
-					destination = new RenderTargetIdentifier(settings.dstTextureId);
+					destination = m_DestinationTexture;
 				} else if (settings.dstType == Target.RenderTextureObject) {
-					destination = new RenderTargetIdentifier(settings.dstTextureObject);
+					destination = RTHandles.Alloc(settings.dstTextureObject);
 				}
 
 				if (settings.setInverseViewMatrix) {
@@ -110,17 +108,17 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 						opaqueDesc.graphicsFormat = settings.graphicsFormat;
 					}
 					// 像素游戏，强制使用Point过滤
-					cmd.GetTemporaryRT(m_DestinationTexture.id, opaqueDesc, FilterMode.Point);
+					RenderingUtils.ReAllocateIfNeeded(ref m_DestinationTexture, opaqueDesc, FilterMode.Point, name: settings.dstTextureId);
 				}
 
 				//Debug.Log($"src = {source},     dst = {destination} ");
 				// Can't read and write to same color target, use a TemporaryRT
 				if (source == destination || (settings.srcType == settings.dstType && settings.srcType == Target.CameraColor)) {
-					cmd.GetTemporaryRT(m_TemporaryColorTexture.id, opaqueDesc, FilterMode.Point);
-					Blit(cmd, source, m_TemporaryColorTexture.Identifier(), blitMaterial, settings.blitMaterialPassIndex);
-					Blit(cmd, m_TemporaryColorTexture.Identifier(), destination);
+					RenderingUtils.ReAllocateIfNeeded(ref m_TemporaryColorTexture, opaqueDesc, FilterMode.Point, name: "_TemporaryColorTexture");
+					Blitter.BlitCameraTexture(cmd, source, m_TemporaryColorTexture, blitMaterial, settings.blitMaterialPassIndex);
+					Blitter.BlitCameraTexture(cmd, m_TemporaryColorTexture, destination);
 				} else {
-					Blit(cmd, source, destination, blitMaterial, settings.blitMaterialPassIndex);
+					Blitter.BlitCameraTexture(cmd, source, destination, blitMaterial, settings.blitMaterialPassIndex);
 				}
 
 				context.ExecuteCommandBuffer(cmd);
@@ -128,11 +126,20 @@ as a workaround for 2D Renderer not supporting features (prior to 2021.2). Uncom
 			}
 
 			public override void FrameCleanup(CommandBuffer cmd) {
-				if (settings.dstType == Target.TextureID) {
-					cmd.ReleaseTemporaryRT(m_DestinationTexture.id);
+				// RTHandle cleanup is handled automatically by the system
+			}
+
+			public override void OnCameraCleanup(CommandBuffer cmd) {
+				// RTHandle cleanup
+				m_TemporaryColorTexture?.Release();
+				m_DestinationTexture?.Release();
+				
+				// Release dynamically allocated RTHandles
+				if (settings.srcType != Target.CameraColor) {
+					source?.Release();
 				}
-				if (source == destination || (settings.srcType == settings.dstType && settings.srcType == Target.CameraColor)) {
-					cmd.ReleaseTemporaryRT(m_TemporaryColorTexture.id);
+				if (settings.dstType != Target.CameraColor && settings.dstType != Target.TextureID) {
+					destination?.Release();
 				}
 			}
 		}

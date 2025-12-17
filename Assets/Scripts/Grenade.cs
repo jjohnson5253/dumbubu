@@ -27,8 +27,8 @@ public class Grenade : MonoBehaviour
         if (rb != null)
         {
             rb.gravityScale = gravityScale;
-            rb.drag = drag;
-            rb.angularDrag = angularDrag;
+            rb.linearDamping = drag;
+            rb.angularDamping = angularDrag;
         }
         
         // Ignore collision with the character (Dumbubu)

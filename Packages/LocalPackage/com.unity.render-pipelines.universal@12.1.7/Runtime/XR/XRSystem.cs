@@ -60,7 +60,7 @@ namespace UnityEngine.Rendering.Universal
         {
 #if UNITY_2020_2_OR_NEWER
             //SubsystemManager.GetSubsystems(displayList);
-            SubsystemManager.GetInstances(displayList);
+            SubsystemManager.GetSubsystems(displayList);
 #else
             SubsystemManager.GetInstances(displayList);
 #endif

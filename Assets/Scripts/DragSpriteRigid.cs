@@ -129,7 +129,7 @@ public class DragSpriteRigid : MonoBehaviour
         if (animator != null && rb != null && !isBeingDragged)
         {
             // If moving fast enough and not already floating, enter floating mode
-            if (rb.velocity.magnitude > maxVelocityForStill && !animator.GetBool("isFloating"))
+            if (rb.linearVelocity.magnitude > maxVelocityForStill && !animator.GetBool("isFloating"))
             {
                 EnterRagdollMode();
                 
@@ -237,11 +237,11 @@ public class DragSpriteRigid : MonoBehaviour
             yield break;
         }
 
-        float oldDrag = springJoint.connectedBody.drag;
-        float oldAngularDrag = springJoint.connectedBody.angularDrag;
+        float oldDrag = springJoint.connectedBody.linearDamping;
+        float oldAngularDrag = springJoint.connectedBody.angularDamping;
         
-        springJoint.connectedBody.drag = drag;
-        springJoint.connectedBody.angularDrag = angularDrag;
+        springJoint.connectedBody.linearDamping = drag;
+        springJoint.connectedBody.angularDamping = angularDrag;
 
         // Enter ragdoll mode - enable floating animation
         EnterRagdollMode();
@@ -264,8 +264,8 @@ public class DragSpriteRigid : MonoBehaviour
         // Restore drag values
         if (springJoint.connectedBody)
         {
-            springJoint.connectedBody.drag = oldDrag;
-            springJoint.connectedBody.angularDrag = oldAngularDrag;
+            springJoint.connectedBody.linearDamping = oldDrag;
+            springJoint.connectedBody.angularDamping = oldAngularDrag;
             springJoint.connectedBody = null;
         }
 
@@ -335,7 +335,7 @@ public class DragSpriteRigid : MonoBehaviour
         if (rb == null) return false;
         
         // Check if velocity is below threshold (character is still)
-        float velocityMagnitude = rb.velocity.magnitude;
+        float velocityMagnitude = rb.linearVelocity.magnitude;
         return velocityMagnitude <= maxVelocityForStill;
     }
 
