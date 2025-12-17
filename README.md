@@ -3,14 +3,17 @@
 <div align="center">
   
 [![Steam](https://img.shields.io/badge/Steam-Available-blue?style=for-the-badge&logo=steam&logoColor=white)](https://store.steampowered.com/app/4160160/Dumbubu/)
-[![Unity](https://img.shields.io/badge/Unity-2021.3.9f1-black?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 **You can't afford a house but you can afford Dumbubu**
 
-*Available now on Steam* → **[Get Dumbubu](https://store.steampowered.com/app/4160160/Dumbubu/)**
+Source code for **[Dumbubu Virtual Desktop Pet](https://store.steampowered.com/app/4160160/Dumbubu/)**
 
 </div>
+
+## Usage
+- In Unity Hub: Select `Add project from disk` in Unity Hub and select this directory
+- In Unity Editor: File->Build and Run
 
 ## Features
 
@@ -52,10 +55,6 @@
 - Unity 2021.3.9f1 (specific version required)
 - Steam account (for testing Steam features)
 - Windows 10/11 (primary platform)
-
-### Usage
-- `Add project from disk` in Unity Hub and select this directory
-- File->Build and Run
 
 <div align="center">
 
