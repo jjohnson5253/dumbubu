@@ -17,6 +17,7 @@ public class BlindBoxDisplay : MonoBehaviour
     public Button openButton; // Open blind box button
     
     [Header("Reward Images")]
+    public Sprite blindBoxSprite; // The blind box image to show initially
     public Sprite whiteInventorySprite;
     public Sprite blueInventorySprite; 
     public Sprite pinkInventorySprite;
@@ -120,8 +121,8 @@ public class BlindBoxDisplay : MonoBehaviour
         // Update boxes count
         Instance.UpdateBoxesCount();
         
-        // Clear previous reward
-        Instance.ClearRewardDisplay();
+        // Show blind box image initially
+        Instance.ShowBlindBoxImage();
     }
     
     public static void HideBlindBoxPanel()
@@ -372,6 +373,20 @@ public class BlindBoxDisplay : MonoBehaviour
         
         // Update boxes count
         UpdateBoxesCount();
+    }
+    
+    private void ShowBlindBoxImage()
+    {
+        if (rewardImage != null && blindBoxSprite != null)
+        {
+            rewardImage.sprite = blindBoxSprite;
+            rewardImage.gameObject.SetActive(true);
+        }
+        if (rewardText != null)
+        {
+            rewardText.text = "Drops every 10 minutes";
+            rewardText.gameObject.SetActive(true);
+        }
     }
     
     private void ClearRewardDisplay()
