@@ -2754,6 +2754,7 @@ GameObject:
   - component: {fileID: 1487363344}
   - component: {fileID: 1487363343}
   - component: {fileID: 1487363342}
+  - component: {fileID: 1487363346}
   m_Layer: 5
   m_Name: MenuCanvas
   m_TagString: Untagged
@@ -2843,6 +2844,29 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1487363346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487363341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d46edd93f8c45641853cd2fcb30bdd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menuPanel: {fileID: 775829328}
+  pointsText: {fileID: 1218137099}
+  grenadeToggleButton: {fileID: 456393451}
+  grenadeButtonText: {fileID: 397196631}
+  brownButton: {fileID: 629700973}
+  whiteButton: {fileID: 1902098802}
+  blueButton: {fileID: 1319274676}
+  pinkButton: {fileID: 1200883998}
+  closeButton: {fileID: 556354234}
+  quitButton: {fileID: 1406855973}
+  worldPositionOffset: {x: 0, y: 3, z: 0}
 --- !u!1 &1536501393
 GameObject:
   m_ObjectHideFlags: 0
