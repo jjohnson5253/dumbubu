@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Grenade : MonoBehaviour
@@ -102,13 +103,16 @@ public class Grenade : MonoBehaviour
 
         // Find all rigidbodies within explosion radius
         Collider2D[] colliders = Physics2D.OverlapCircleAll(explosionCenter, explosionRadius);
+        HashSet<Rigidbody2D> affectedRigidbodies = new HashSet<Rigidbody2D>();
 
         foreach (Collider2D col in colliders)
         {
             Rigidbody2D targetRb = col.GetComponent<Rigidbody2D>();
             
-            if (targetRb != null && !targetRb.isKinematic && targetRb != rb)
+            if (targetRb != null && !targetRb.isKinematic && targetRb != rb && !affectedRigidbodies.Contains(targetRb))
             {
+                affectedRigidbodies.Add(targetRb);
+                
                 // Calculate direction from explosion center to object
                 Vector2 objectCenter = targetRb.position;
                 Vector2 explosionDirection = (objectCenter - explosionCenter).normalized;
@@ -122,7 +126,7 @@ public class Grenade : MonoBehaviour
                 float forceFalloff = 1f - (distance / explosionRadius);
                 forceFalloff = Mathf.Clamp01(forceFalloff);
 
-                // Apply explosion force
+                // Apply explosion force (only once per rigidbody)
                 targetRb.AddForce(explosionDirection * explosionForce * forceFalloff, ForceMode2D.Impulse);
 
                 // Add some random rotation for effect
