@@ -8,6 +8,7 @@ public class SteamInventoryManager : MonoBehaviour
     
     private HashSet<int> ownedItemDefIds = new HashSet<int>();
     private Dictionary<int, uint> itemQuantities = new Dictionary<int, uint>();
+    private Dictionary<int, List<SteamItemInstanceID_t>> itemInstances = new Dictionary<int, List<SteamItemInstanceID_t>>();
     private bool inventoryLoaded = false;
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
@@ -146,11 +147,13 @@ public class SteamInventoryManager : MonoBehaviour
         {
             ownedItemDefIds.Clear();
             itemQuantities.Clear();
+            itemInstances.Clear();
             
             foreach (var item in allItems)
             {
                 int itemDefId = item.m_iDefinition.m_SteamItemDef;
                 uint quantity = item.m_unQuantity;
+                SteamItemInstanceID_t instanceId = item.m_itemId;
                 
                 ownedItemDefIds.Add(itemDefId);
                 
@@ -164,7 +167,14 @@ public class SteamInventoryManager : MonoBehaviour
                     itemQuantities[itemDefId] = quantity;
                 }
                 
-                Debug.Log($"Player owns item: ItemDefID={itemDefId}, ItemID={item.m_itemId}, Quantity={quantity}, Total for DefID: {itemQuantities[itemDefId]}");
+                // Store instance IDs for each itemDefId
+                if (!itemInstances.ContainsKey(itemDefId))
+                {
+                    itemInstances[itemDefId] = new List<SteamItemInstanceID_t>();
+                }
+                itemInstances[itemDefId].Add(instanceId);
+                
+                Debug.Log($"Player owns item: ItemDefID={itemDefId}, ItemID={instanceId}, Quantity={quantity}, Total for DefID: {itemQuantities[itemDefId]}");
             }
             
             inventoryLoaded = true;
@@ -223,6 +233,44 @@ public class SteamInventoryManager : MonoBehaviour
         }
         
         return itemQuantities.TryGetValue(itemDefId, out uint quantity) ? quantity : 0;
+    }
+    
+    /// <summary>
+    /// Get a Steam item instance ID for a specific item definition ID
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to get an instance for</param>
+    /// <returns>A Steam item instance ID, or Invalid if none available</returns>
+    public SteamItemInstanceID_t GetItemInstance(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return SteamItemInstanceID_t.Invalid;
+        }
+        
+        if (itemInstances.TryGetValue(itemDefId, out List<SteamItemInstanceID_t> instances) && instances.Count > 0)
+        {
+            return instances[0]; // Return the first available instance
+        }
+        
+        return SteamItemInstanceID_t.Invalid;
+    }
+    
+    /// <summary>
+    /// Get all Steam item instance IDs for a specific item definition ID
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to get instances for</param>
+    /// <returns>List of Steam item instance IDs</returns>
+    public List<SteamItemInstanceID_t> GetItemInstances(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return new List<SteamItemInstanceID_t>();
+        }
+        
+        return itemInstances.TryGetValue(itemDefId, out List<SteamItemInstanceID_t> instances) ? 
+               new List<SteamItemInstanceID_t>(instances) : new List<SteamItemInstanceID_t>();
     }
     
     /// <summary>
