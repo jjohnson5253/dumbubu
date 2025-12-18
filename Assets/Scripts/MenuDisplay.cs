@@ -16,6 +16,7 @@ public class MenuDisplay : MonoBehaviour
     public Button whiteButton;
     public Button blueButton;
     public Button pinkButton;
+    public Button blindBoxButton; // Blind box button
     public Button closeButton; // X button
     public Button quitButton;
     
@@ -125,6 +126,12 @@ public class MenuDisplay : MonoBehaviour
             pinkButton.onClick.AddListener(() => SwitchColor(DumbubuColor.Pink));
         }
         
+        // Blind box button
+        if (blindBoxButton != null)
+        {
+            blindBoxButton.onClick.AddListener(() => BlindBoxDisplay.ShowBlindBoxPanel());
+        }
+        
         // Close button
         if (closeButton != null)
         {
@@ -188,6 +195,26 @@ public class MenuDisplay : MonoBehaviour
         if (grenadeMode && MessagesDisplay.Instance != null)
         {
             MessagesDisplay.Instance.ShowGrenadeMessage();
+        }
+    }
+    
+    public static void ShowMenuPanel()
+    {
+        if (Instance == null) return;
+        
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(true);
+        }
+    }
+    
+    public static void HideMenuPanel()
+    {
+        if (Instance == null) return;
+        
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(false);
         }
     }
     
