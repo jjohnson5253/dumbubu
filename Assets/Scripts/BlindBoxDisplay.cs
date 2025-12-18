@@ -277,16 +277,44 @@ public class BlindBoxDisplay : MonoBehaviour
         UpdateBoxesCount(); // Update count after opening
     }
     
-    private void OnExchangeCompleted(int itemDefId, bool success)
+    private void OnExchangeCompleted(int[] itemDefIds, bool success)
     {
-        if (success)
+        if (success && itemDefIds != null && itemDefIds.Length > 0)
         {
             Debug.Log("Steam exchange completed successfully!");
-            ShowReward(itemDefId);
+            
+            // Filter out the blind box item ID (69421) and find the actual reward
+            int rewardItemDefId = 0;
+            foreach (int itemDefId in itemDefIds)
+            {
+                Debug.Log($"Exchange result contains ItemDefID: {itemDefId}");
+                
+                // Skip the blind box item ID - we want the actual reward
+                if (itemDefId != blindBoxItemDefId)
+                {
+                    rewardItemDefId = itemDefId;
+                    Debug.Log($"Found reward item: {rewardItemDefId}");
+                    break;
+                }
+            }
+            
+            if (rewardItemDefId != 0)
+            {
+                ShowReward(rewardItemDefId);
+            }
+            else
+            {
+                Debug.LogWarning("No reward item found in exchange results");
+                // Re-enable button if no reward found
+                if (openButton != null)
+                {
+                    openButton.interactable = true;
+                }
+            }
         }
         else
         {
-            Debug.LogError("Exchange failed");
+            Debug.LogError("Exchange failed or returned no items");
             // Re-enable open button on failure
             if (openButton != null)
             {

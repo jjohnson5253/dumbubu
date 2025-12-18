@@ -18,7 +18,7 @@ public class SteamInventoryManager : MonoBehaviour
     
     public System.Action OnInventoryLoaded;
     public System.Action<int> OnItemDropped; // Called when an item is dropped with the itemDefId
-    public System.Action<int, bool> OnExchangeCompleted; // Called when an exchange completes (itemDefId, success)
+    public System.Action<int[], bool> OnExchangeCompleted; // Called when an exchange completes (itemDefIds, success)
     
     private void Awake()
     {
@@ -114,13 +114,18 @@ public class SteamInventoryManager : MonoBehaviour
                 SteamItemDetails_t[] items = new SteamItemDetails_t[itemCount];
                 if (SteamInventory.GetResultItems(pCallback.m_handle, items, ref itemCount))
                 {
-                    foreach (var item in items)
+                    // Collect all item def IDs from the exchange result
+                    int[] resultItemDefIds = new int[itemCount];
+                    for (int i = 0; i < itemCount; i++)
                     {
-                        int itemDefId = item.m_iDefinition.m_SteamItemDef;
-                        uint quantity = item.m_unQuantity;
-                        Debug.Log($"Exchange reward: ItemDefID={itemDefId}, Quantity={quantity}");
-                        OnExchangeCompleted?.Invoke(itemDefId, true);
+                        int itemDefId = items[i].m_iDefinition.m_SteamItemDef;
+                        uint quantity = items[i].m_unQuantity;
+                        resultItemDefIds[i] = itemDefId;
+                        Debug.Log($"Exchange result item: ItemDefID={itemDefId}, Quantity={quantity}");
                     }
+                    
+                    // Pass all item def IDs to the callback
+                    OnExchangeCompleted?.Invoke(resultItemDefIds, true);
                 }
                 
                 // Reload inventory to update counts after exchange
@@ -129,7 +134,7 @@ public class SteamInventoryManager : MonoBehaviour
             else
             {
                 Debug.LogError("Exchange returned no items");
-                OnExchangeCompleted?.Invoke(0, false);
+                OnExchangeCompleted?.Invoke(new int[0], false);
             }
             
             SteamInventory.DestroyResult(pCallback.m_handle);
