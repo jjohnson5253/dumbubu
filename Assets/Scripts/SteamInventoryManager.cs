@@ -14,9 +14,11 @@ public class SteamInventoryManager : MonoBehaviour
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
     private SteamInventoryResult_t m_inventoryResult = SteamInventoryResult_t.Invalid;
     private SteamInventoryResult_t m_dropResult = SteamInventoryResult_t.Invalid;
+    private SteamInventoryResult_t m_exchangeResult = SteamInventoryResult_t.Invalid;
     
     public System.Action OnInventoryLoaded;
     public System.Action<int> OnItemDropped; // Called when an item is dropped with the itemDefId
+    public System.Action<int, bool> OnExchangeCompleted; // Called when an exchange completes (itemDefId, success)
     
     private void Awake()
     {
@@ -102,6 +104,38 @@ public class SteamInventoryManager : MonoBehaviour
         }
         
         Debug.Log($"Inventory result contains {itemCount} items");
+        
+        // Check if this is an exchange result
+        if (pCallback.m_handle == m_exchangeResult)
+        {
+            if (itemCount > 0)
+            {
+                // Get the exchange result items
+                SteamItemDetails_t[] items = new SteamItemDetails_t[itemCount];
+                if (SteamInventory.GetResultItems(pCallback.m_handle, items, ref itemCount))
+                {
+                    foreach (var item in items)
+                    {
+                        int itemDefId = item.m_iDefinition.m_SteamItemDef;
+                        uint quantity = item.m_unQuantity;
+                        Debug.Log($"Exchange reward: ItemDefID={itemDefId}, Quantity={quantity}");
+                        OnExchangeCompleted?.Invoke(itemDefId, true);
+                    }
+                }
+                
+                // Reload inventory to update counts after exchange
+                LoadInventory();
+            }
+            else
+            {
+                Debug.LogError("Exchange returned no items");
+                OnExchangeCompleted?.Invoke(0, false);
+            }
+            
+            SteamInventory.DestroyResult(pCallback.m_handle);
+            m_exchangeResult = SteamInventoryResult_t.Invalid;
+            return;
+        }
         
         // Check if this is a drop result (from TriggerItemDrop)
         if (pCallback.m_handle == m_dropResult)
@@ -274,6 +308,47 @@ public class SteamInventoryManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Perform a Steam inventory exchange
+    /// </summary>
+    /// <param name="generatorItemDefId">The generator item definition ID</param>
+    /// <param name="materialInstanceId">The material item instance ID to consume</param>
+    /// <returns>True if exchange was initiated successfully</returns>
+    public bool PerformExchange(int generatorItemDefId, SteamItemInstanceID_t materialInstanceId)
+    {
+        if (!SteamManager.Initialized)
+        {
+            Debug.LogWarning("Cannot perform exchange - Steam not initialized");
+            return false;
+        }
+        
+        if (materialInstanceId == SteamItemInstanceID_t.Invalid)
+        {
+            Debug.LogError("Invalid material instance ID for exchange");
+            return false;
+        }
+        
+        Debug.Log($"Performing Steam exchange with generator {generatorItemDefId} and material instance {materialInstanceId}");
+        
+        // Recipe: generator creates random rewards from consumed material
+        SteamItemDef_t[] recipe = new SteamItemDef_t[] { new SteamItemDef_t(generatorItemDefId) };
+        uint[] recipeQuantities = new uint[] { 1 };
+        SteamItemInstanceID_t[] materials = new SteamItemInstanceID_t[] { materialInstanceId };
+        uint[] materialQuantities = new uint[] { 1 };
+        
+        // Perform the exchange
+        if (SteamInventory.ExchangeItems(out m_exchangeResult, recipe, recipeQuantities, 1, materials, materialQuantities, 1))
+        {
+            Debug.Log("Steam exchange initiated successfully - waiting for callback");
+            return true;
+        }
+        else
+        {
+            Debug.LogError("Failed to initiate Steam exchange");
+            return false;
+        }
+    }
+    
+    /// <summary>
     /// Trigger a playtime item drop. Call this at significant game moments (end of level, match, etc.)
     /// </summary>
     /// <param name="playtimeGeneratorDefId">The itemdefid of the "playtimegenerator" type item</param>
@@ -309,6 +384,11 @@ public class SteamInventoryManager : MonoBehaviour
         if (m_dropResult != SteamInventoryResult_t.Invalid)
         {
             SteamInventory.DestroyResult(m_dropResult);
+        }
+        
+        if (m_exchangeResult != SteamInventoryResult_t.Invalid)
+        {
+            SteamInventory.DestroyResult(m_exchangeResult);
         }
     }
 }
