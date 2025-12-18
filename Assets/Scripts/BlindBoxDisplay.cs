@@ -322,7 +322,8 @@ public class BlindBoxDisplay : MonoBehaviour
                     }
                 }
                 
-                // Reload inventory to update counts after exchange
+                // Reload inventory from Steam servers to update counts after exchange
+                Debug.Log("Exchange completed - refreshing inventory from Steam...");
                 if (SteamInventoryManager.Instance != null)
                 {
                     SteamInventoryManager.Instance.LoadInventory();
@@ -409,7 +410,7 @@ public class BlindBoxDisplay : MonoBehaviour
         UpdateBoxesCount();
         
         // Re-enable the open button if we have blind boxes
-        int blindBoxCount = (int)SteamInventoryManager.Instance.GetItemCount(100);
+        int blindBoxCount = (int)SteamInventoryManager.Instance.GetItemCount(blindBoxItemDefId);
         if (blindBoxCount > 0 && openButton != null)
         {
             openButton.interactable = true;

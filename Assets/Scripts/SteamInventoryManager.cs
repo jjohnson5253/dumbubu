@@ -12,7 +12,7 @@ public class SteamInventoryManager : MonoBehaviour
     private bool inventoryLoaded = false;
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
-    private SteamInventoryResult_t m_inventoryResult = SteamInventoryResult_t.Invalid;
+    private SteamInventoryResult_t m_inventoryResult = StevamInventoryResult_t.Invalid;
     private SteamInventoryResult_t m_dropResult = SteamInventoryResult_t.Invalid;
     
     public System.Action OnInventoryLoaded;
@@ -144,6 +144,15 @@ public class SteamInventoryManager : MonoBehaviour
             return;
         }
         
+        // Only process inventory loads from our own GetAllItems calls
+        if (pCallback.m_handle != m_inventoryResult)
+        {
+            Debug.Log($"Ignoring inventory result callback for handle {pCallback.m_handle} (not our main inventory result {m_inventoryResult})");
+            return;
+        }
+        
+        Debug.Log($"Processing main inventory result for handle {pCallback.m_handle}");
+        
         // Regular inventory load
         if (itemCount == 0)
         {
@@ -198,6 +207,7 @@ public class SteamInventoryManager : MonoBehaviour
         
         // Clean up the result
         SteamInventory.DestroyResult(pCallback.m_handle);
+        m_inventoryResult = SteamInventoryResult_t.Invalid;
     }
     
     /// <summary>
@@ -243,7 +253,16 @@ public class SteamInventoryManager : MonoBehaviour
             return 0;
         }
         
-        return itemQuantities.TryGetValue(itemDefId, out uint quantity) ? quantity : 0;
+        uint quantity = itemQuantities.TryGetValue(itemDefId, out uint qty) ? qty : 0;
+        Debug.Log($"GetItemCount({itemDefId}): returning {quantity}. Total items in dictionary: {itemQuantities.Count}");
+        
+        // Log all items for this itemDefId if we have instances
+        if (itemInstances.TryGetValue(itemDefId, out var instances))
+        {
+            Debug.Log($"Item {itemDefId} has {instances.Count} instances");
+        }
+        
+        return quantity;
     }
     
     /// <summary>
