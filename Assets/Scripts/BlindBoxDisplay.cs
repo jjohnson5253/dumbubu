@@ -211,17 +211,50 @@ public class BlindBoxDisplay : MonoBehaviour
             openButton.interactable = false;
         }
         
-        // Setup exchange: consume 1 blind box (69421) to get generator result (69422)
+        // Call the real Steam exchange
+        PerformSteamExchange();
+    }
+    
+    private void PerformSteamExchange()
+    {
+        Debug.Log("Performing real Steam exchange...");
+        
+        // Get a blind box instance ID to consume
+        SteamItemInstanceID_t blindBoxInstanceId = SteamInventoryManager.Instance.GetItemInstance(blindBoxItemDefId);
+        
+        if (blindBoxInstanceId == SteamItemInstanceID_t.Invalid)
+        {
+            Debug.LogError("No blind box instances available for exchange");
+            // Re-enable button on failure
+            if (openButton != null)
+            {
+                openButton.interactable = true;
+            }
+            return;
+        }
+        
+        Debug.Log($"Using blind box instance ID: {blindBoxInstanceId} for exchange");
+        
+        // Recipe: generator 69422 creates random rewards from consumed blind box 69421
         SteamItemDef_t[] recipe = new SteamItemDef_t[] { new SteamItemDef_t(generatorItemDefId) };
-        SteamItemInstanceID_t[] materials = new SteamItemInstanceID_t[] { }; // Need actual instance ID
+        uint[] recipeQuantities = new uint[] { 1 };
+        SteamItemInstanceID_t[] materials = new SteamItemInstanceID_t[] { blindBoxInstanceId };
         uint[] materialQuantities = new uint[] { 1 };
         
-        // Note: This is simplified - you'd need to get the actual instance ID of the blind box item
-        // from the inventory to use in ExchangeItems
-        Debug.LogWarning("ExchangeItems implementation needs actual item instance IDs from inventory");
-        
-        // For now, just simulate the exchange
-        SimulateExchange();
+        // Perform the exchange
+        if (SteamInventory.ExchangeItems(out exchangeResult, recipe, recipeQuantities, 1, materials, materialQuantities, 1))
+        {
+            Debug.Log("Steam exchange initiated successfully - waiting for callback");
+        }
+        else
+        {
+            Debug.LogError("Failed to initiate Steam exchange");
+            // Re-enable button on failure
+            if (openButton != null)
+            {
+                openButton.interactable = true;
+            }
+        }
     }
     
     private void SimulateExchange()
@@ -260,6 +293,8 @@ public class BlindBoxDisplay : MonoBehaviour
         {
             if (callback.m_result == EResult.k_EResultOK)
             {
+                Debug.Log("Steam exchange completed successfully!");
+                
                 // Get the exchange result
                 uint itemCount = 0;
                 if (SteamInventory.GetResultItems(callback.m_handle, null, ref itemCount))
@@ -272,11 +307,18 @@ public class BlindBoxDisplay : MonoBehaviour
                             foreach (var item in items)
                             {
                                 int itemDefId = item.m_iDefinition.m_SteamItemDef;
-                                Debug.Log($"Received item: {itemDefId}");
+                                uint quantity = item.m_unQuantity;
+                                Debug.Log($"Exchange reward: ItemDefID={itemDefId}, Quantity={quantity}");
                                 ShowReward(itemDefId);
                             }
                         }
                     }
+                }
+                
+                // Reload inventory to update counts after exchange
+                if (SteamInventoryManager.Instance != null)
+                {
+                    SteamInventoryManager.Instance.LoadInventory();
                 }
             }
             else
