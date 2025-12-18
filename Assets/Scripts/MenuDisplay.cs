@@ -241,7 +241,7 @@ public class MenuDisplay : MonoBehaviour
         TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
         if (buttonText != null)
         {
-            buttonText.color = isAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+            buttonText.color = isAvailable ? Color.black : new Color(0.5f, 0.5f, 0.5f, 0.7f);
         }
     }
     
@@ -256,7 +256,7 @@ public class MenuDisplay : MonoBehaviour
         if (grenadeButtonText != null)
         {
             grenadeButtonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
-            grenadeButtonText.color = canUseGrenade ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+            grenadeButtonText.color = canUseGrenade ? Color.black : new Color(0.5f, 0.5f, 0.5f, 0.7f);
         }
         
         // Update button colors
