@@ -150,7 +150,6 @@ public class MenuDisplay : MonoBehaviour
         {
             TextureSwitcher.Instance.SwitchColor(color);
         }
-        HideMenu(); // Close menu after selection
     }
     
     public static void ShowMenu(Vector3 worldPosition, int points)
