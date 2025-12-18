@@ -28,6 +28,7 @@ public class BlindBoxDisplay : MonoBehaviour
     private int generatorItemDefId = 69422; // Generator for exchange
     private GameObject dumbubu;
     private Camera mainCamera;
+    private int boxesCount = 0; // Track current box count
     
     private void Awake()
     {
@@ -61,7 +62,7 @@ public class BlindBoxDisplay : MonoBehaviour
         if (SteamInventoryManager.Instance != null)
         {
             SteamInventoryManager.Instance.OnExchangeCompleted += OnExchangeCompleted;
-            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryRefreshed;
+            SteamInventoryManager.Instance.OnItemDropped += OnItemDropped;
         }
         
         // Clear reward display initially
@@ -188,6 +189,7 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void SetBoxesText(int count)
     {
+        boxesCount = count;
         if (boxesText != null)
         {
             boxesText.text = $"Boxes: {count}";
@@ -302,6 +304,8 @@ public class BlindBoxDisplay : MonoBehaviour
             if (rewardItemDefId != 0)
             {
                 ShowReward(rewardItemDefId);
+                // Manually decrement box count since we consumed 1 box
+                DecrementBoxCount();
             }
             else
             {
@@ -321,15 +325,6 @@ public class BlindBoxDisplay : MonoBehaviour
             {
                 openButton.interactable = true;
             }
-        }
-    }
-    
-    private void OnInventoryRefreshed()
-    {
-        // Update boxes count when inventory is refreshed (after exchange)
-        if (blindBoxPanel != null && blindBoxPanel.activeSelf)
-        {
-            UpdateBoxesCount();
         }
     }
     
@@ -375,12 +370,60 @@ public class BlindBoxDisplay : MonoBehaviour
         }
     }
     
+    private void DecrementBoxCount()
+    {
+        // Decrement the tracked count
+        if (boxesCount > 0)
+        {
+            boxesCount--;
+            
+            // Update display
+            if (boxesText != null)
+            {
+                boxesText.text = $"Boxes: {boxesCount}";
+            }
+            
+            // Update open button state
+            if (openButton != null)
+            {
+                openButton.interactable = boxesCount > 0;
+            }
+        }
+    }
+    
+    private void OnItemDropped(int itemDefId)
+    {
+        // Check if the dropped item is a blind box
+        if (itemDefId == blindBoxItemDefId)
+        {
+            Debug.Log($"Blind box dropped! Incrementing box count from {boxesCount} to {boxesCount + 1}");
+            
+            // Increment our tracked count
+            boxesCount++;
+            
+            // Update display if panel is active
+            if (blindBoxPanel != null && blindBoxPanel.activeSelf)
+            {
+                if (boxesText != null)
+                {
+                    boxesText.text = $"Boxes: {boxesCount}";
+                }
+                
+                // Update open button state
+                if (openButton != null)
+                {
+                    openButton.interactable = boxesCount > 0;
+                }
+            }
+        }
+    }
+    
     private void OnDestroy()
     {
         if (SteamInventoryManager.Instance != null)
         {
             SteamInventoryManager.Instance.OnExchangeCompleted -= OnExchangeCompleted;
-            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryRefreshed;
+            SteamInventoryManager.Instance.OnItemDropped -= OnItemDropped;
         }
     }
 }
