@@ -114,7 +114,7 @@ public class TransparentWindowNew : MonoBehaviour
 
         if (clickThrough != prevClickThrough) {
             if (clickThrough) {
-                Debug.Log("ClickThrough");
+                //Debug.Log("ClickThrough");
                 #if !UNITY_EDITOR
                 SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
                 SetWindowLong (hwnd, -20, (uint)524288 | (uint)32);//GWL_EXSTYLE=-20; WS_EX_LAYERED=524288=&h80000, WS_EX_TRANSPARENT=32=0x00000020L
@@ -123,7 +123,7 @@ public class TransparentWindowNew : MonoBehaviour
                 SetWindowLong(hwnd, GWL_EXSTYLE, (uint)GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW);  
                 #endif
             } else {
-                Debug.Log("Not ClickThrough");
+                //Debug.Log("Not ClickThrough");
                 #if !UNITY_EDITOR
                 SetWindowLong (hwnd, -20, ~(((uint)524288) | ((uint)32)));//GWL_EXSTYLE=-20; WS_EX_LAYERED=524288=&h80000, WS_EX_TRANSPARENT=32=0x00000020L
                 SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, fWidth, fHeight, 32 | 64); //SWP_FRAMECHANGED = 0x0020 (32); //SWP_SHOWWINDOW = 0x0040 (64)
