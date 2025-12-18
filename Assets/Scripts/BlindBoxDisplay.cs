@@ -65,6 +65,12 @@ public class BlindBoxDisplay : MonoBehaviour
             steamInventoryResultReady = Callback<SteamInventoryResultReady_t>.Create(OnSteamInventoryResultReady);
         }
         
+        // Subscribe to inventory loaded events
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryUpdated;
+        }
+        
         // Clear reward display initially
         ClearRewardDisplay();
     }
@@ -382,11 +388,35 @@ public class BlindBoxDisplay : MonoBehaviour
         }
     }
     
+    private void OnInventoryUpdated()
+    {
+        Debug.Log("BlindBoxDisplay: Inventory updated callback received");
+        UpdateBoxesCount();
+        
+        // Re-enable the open button if we have blind boxes
+        int blindBoxCount = (int)SteamInventoryManager.Instance.GetItemCount(100);
+        if (blindBoxCount > 0 && openButton != null)
+        {
+            openButton.interactable = true;
+        }
+    }
+    
     private void OnDestroy()
     {
         if (exchangeResult != SteamInventoryResult_t.Invalid)
         {
             SteamInventory.DestroyResult(exchangeResult);
+        }
+        
+        if (steamInventoryResultReady != null)
+        {
+            steamInventoryResultReady.Dispose();
+        }
+        
+        // Unsubscribe from inventory events
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryUpdated;
         }
     }
 }

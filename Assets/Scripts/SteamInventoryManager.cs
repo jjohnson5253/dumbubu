@@ -97,7 +97,18 @@ public class SteamInventoryManager : MonoBehaviour
         uint itemCount = 0;
         if (!SteamInventory.GetResultItems(pCallback.m_handle, null, ref itemCount))
         {
-            Debug.LogError("Failed to get item count");
+            Debug.LogError($"Failed to get item count for result handle {pCallback.m_handle}. Result: {pCallback.m_result}");
+            
+            // Don't return immediately - clean up the result and continue
+            SteamInventory.DestroyResult(pCallback.m_handle);
+            
+            // If this was the main inventory result, we still need to mark as loaded and notify
+            if (pCallback.m_handle == m_inventoryResult)
+            {
+                m_inventoryResult = SteamInventoryResult_t.Invalid;
+                inventoryLoaded = true;
+                OnInventoryLoaded?.Invoke();
+            }
             return;
         }
         
