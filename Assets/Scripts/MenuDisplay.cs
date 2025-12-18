@@ -78,6 +78,17 @@ public class MenuDisplay : MonoBehaviour
                 DisableGrenadeMode();
             }
         }
+        
+        // Handle clicking outside menu to close it
+        if (Input.GetMouseButtonDown(0) && IsDisplaying())
+        {
+            // Check if click is outside the menu panel
+            RectTransform menuRect = menuPanel.GetComponent<RectTransform>();
+            if (menuRect != null && !RectTransformUtility.RectangleContainsScreenPoint(menuRect, Input.mousePosition))
+            {
+                HideMenu();
+            }
+        }
     }
     
     private void SetupButtonListeners()
@@ -236,13 +247,6 @@ public class MenuDisplay : MonoBehaviour
         
         bool isAvailable = TextureSwitcher.Instance != null && TextureSwitcher.Instance.IsColorAvailable(color);
         button.interactable = isAvailable;
-        
-        // Update button text color if it has text
-        TextMeshProUGUI buttonText = button.GetComponentInChildren<TextMeshProUGUI>();
-        if (buttonText != null)
-        {
-            buttonText.color = isAvailable ? Color.black : new Color(0.5f, 0.5f, 0.5f, 0.7f);
-        }
     }
     
     private void UpdateGrenadeButton()
@@ -256,24 +260,6 @@ public class MenuDisplay : MonoBehaviour
         if (grenadeButtonText != null)
         {
             grenadeButtonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
-            grenadeButtonText.color = canUseGrenade ? Color.black : new Color(0.5f, 0.5f, 0.5f, 0.7f);
         }
-        
-        // Update button colors
-        ColorBlock colors = grenadeToggleButton.colors;
-        if (grenadeMode)
-        {
-            colors.normalColor = new Color(0.2f, 0.6f, 0.2f, 1f);
-            colors.highlightedColor = new Color(0.3f, 0.7f, 0.3f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.5f, 0.15f, 1f);
-        }
-        else
-        {
-            colors.normalColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-            colors.highlightedColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.15f, 0.15f, 1f);
-        }
-        colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        grenadeToggleButton.colors = colors;
     }
 }
