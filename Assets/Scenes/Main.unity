@@ -1009,7 +1009,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1.7, y: -99.4}
+  m_AnchoredPosition: {x: 54, y: -99.4}
   m_SizeDelta: {x: 200, y: 28.797}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &528202430
@@ -1032,7 +1032,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Reward Text
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1095,7 +1095,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: -106.33603, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1661,7 +1661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0.38679248, g: 0.38679248, b: 0.38679248, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1774,7 +1774,7 @@ GameObject:
   - component: {fileID: 950538697}
   - component: {fileID: 950538696}
   m_Layer: 5
-  m_Name: MessageDisplay
+  m_Name: MessageCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1933,7 +1933,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0.3882353, g: 0.3882353, b: 0.3882353, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3560,9 +3560,11 @@ MonoBehaviour:
   rewardImage: {fileID: 57157708}
   rewardText: {fileID: 528202430}
   openButton: {fileID: 1261787150}
+  blindBoxSprite: {fileID: 21300000, guid: 8c4d63d25eab0f846a6b0d0460720ce4, type: 3}
   whiteInventorySprite: {fileID: 21300000, guid: 255bfe2e83ee99c48b4edd1178864f53, type: 3}
   blueInventorySprite: {fileID: 21300000, guid: 2082179f9715a3e448067426d6b697f2, type: 3}
   pinkInventorySprite: {fileID: 21300000, guid: de29123fe3104794ea0691ee5ea22cd5, type: 3}
+  worldPositionOffset: {x: 0, y: 3, z: 0}
 --- !u!1 &1536501393
 GameObject:
   m_ObjectHideFlags: 0
