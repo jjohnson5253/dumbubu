@@ -4075,6 +4075,9 @@ GameObject:
   - component: {fileID: 4586163393330704974}
   - component: {fileID: 4586163393330704976}
   - component: {fileID: 4586163393330704977}
+  - component: {fileID: 4586163393330704979}
+  - component: {fileID: 4586163393330704978}
+  - component: {fileID: 4586163393330704980}
   m_Layer: 0
   m_Name: Dumbubu
   m_TagString: Untagged
@@ -4178,7 +4181,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.003484726, y: 0.17373416}
+  m_Offset: {x: 0.0011471808, y: 0.21218134}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -4189,7 +4192,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.29461926, y: 0.34746832}
+  m_Size: {x: 0.28589648, y: 0.4243627}
   m_EdgeRadius: 0
 --- !u!50 &4586163393330704970
 Rigidbody2D:
@@ -4205,7 +4208,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0
+  m_AngularDrag: 5
   m_GravityScale: 1
   m_Material: {fileID: 0}
   m_Interpolate: 0
@@ -4295,14 +4298,14 @@ CapsuleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3814130942722713842}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.0043477057, y: 0.59093505}
-  m_Size: {x: 0.66950184, y: 0.47068673}
+  m_Offset: {x: -0.0016948637, y: 0.5794179}
+  m_Size: {x: 0.6802054, y: 0.4472776}
   m_Direction: 1
 --- !u!58 &4586163393330704976
 CircleCollider2D:
@@ -4333,9 +4336,57 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.004350836, y: 0.21751067}
+  m_Offset: {x: 0.12027031, y: 0.083924934}
   serializedVersion: 2
-  m_Radius: 0.21723624
+  m_Radius: 0.083429016
+--- !u!58 &4586163393330704978
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3814130942722713842}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.004292375, y: 0.22413337}
+  serializedVersion: 2
+  m_Radius: 0.21210666
+--- !u!58 &4586163393330704979
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3814130942722713842}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.12198515, y: 0.08120787}
+  serializedVersion: 2
+  m_Radius: 0.08186996
+--- !u!58 &4586163393330704980
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3814130942722713842}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 6200000, guid: 3061a9d65064a4869b6e4393508af19c, type: 2}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0, y: 0.41031814}
+  serializedVersion: 2
+  m_Radius: 0.40903893
 --- !u!1 &4646615612897294476
 GameObject:
   m_ObjectHideFlags: 0
