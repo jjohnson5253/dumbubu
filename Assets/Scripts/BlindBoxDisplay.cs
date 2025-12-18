@@ -21,10 +21,15 @@ public class BlindBoxDisplay : MonoBehaviour
     public Sprite blueInventorySprite; 
     public Sprite pinkInventorySprite;
     
+    [Header("Settings")]
+    public Vector3 worldPositionOffset = Vector3.up * 3f; // Offset from Dumbubu (same as MenuDisplay)
+    
     private int blindBoxItemDefId = 69421; // Blind box item
     private int generatorItemDefId = 69422; // Generator for exchange
     private SteamInventoryResult_t exchangeResult = SteamInventoryResult_t.Invalid;
     private Callback<SteamInventoryResultReady_t> steamInventoryResultReady;
+    private GameObject dumbubu;
+    private Camera mainCamera;
     
     private void Awake()
     {
@@ -42,6 +47,9 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void Start()
     {
+        mainCamera = Camera.main;
+        dumbubu = GameObject.Find("Dumbubu");
+        
         // Hide blind box panel initially
         if (blindBoxPanel != null)
         {
@@ -59,6 +67,17 @@ public class BlindBoxDisplay : MonoBehaviour
         
         // Clear reward display initially
         ClearRewardDisplay();
+    }
+    
+    private void Update()
+    {
+        // Position blind box panel above Dumbubu when active (same as MenuDisplay)
+        if (blindBoxPanel != null && blindBoxPanel.activeSelf && dumbubu != null && mainCamera != null)
+        {
+            Vector3 worldPosition = dumbubu.transform.position + worldPositionOffset;
+            Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+            blindBoxPanel.transform.position = screenPosition;
+        }
     }
     
     private void SetupButtonListeners()
