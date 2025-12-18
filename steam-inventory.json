@@ -16,7 +16,7 @@
       "itemdefid": 69421,
       "type": "item",
       "name": "Blind Box",
-      "description": "Contains one random dumbubu. Use this item to reveal what's inside!",
+      "description": "Contains random dumbubu",
       "icon_url": "https://i.ibb.co/dwhKTvXf/blindbox-hd-best.png",
       "tradable": false,
       "marketable": false
