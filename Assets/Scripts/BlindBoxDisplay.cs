@@ -135,16 +135,25 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void UpdateBoxesCount()
     {
+        Debug.Log("UpdateBoxesCount called");
+        
         if (!SteamManager.Initialized)
         {
+            Debug.Log("Steam not initialized");
             SetBoxesText(0);
             return;
         }
         
+        Debug.Log($"SteamInventoryManager.Instance: {SteamInventoryManager.Instance}");
+        Debug.Log($"Inventory loaded: {SteamInventoryManager.Instance?.IsInventoryLoaded()}");
+        
         // Get count of blind box items from Steam inventory
         if (SteamInventoryManager.Instance != null && SteamInventoryManager.Instance.IsInventoryLoaded())
         {
+            Debug.Log($"Looking for blind box item: {blindBoxItemDefId}");
+            
             int boxCount = GetBlindBoxCount();
+            Debug.Log($"Blind box count: {boxCount}");
             SetBoxesText(boxCount);
             
             // Enable/disable open button based on box count
@@ -155,6 +164,7 @@ public class BlindBoxDisplay : MonoBehaviour
         }
         else
         {
+            Debug.Log("SteamInventoryManager not available or inventory not loaded");
             SetBoxesText(0);
             if (openButton != null)
             {
@@ -165,10 +175,16 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private int GetBlindBoxCount()
     {
-        // This would need to be implemented in SteamInventoryManager
-        // For now, return 0 as placeholder
-        // TODO: Add method to SteamInventoryManager to get item count by ID
-        return 0;
+        if (SteamInventoryManager.Instance == null)
+        {
+            Debug.Log("SteamInventoryManager.Instance is null");
+            return 0;
+        }
+        
+        uint boxCount = SteamInventoryManager.Instance.GetItemCount(blindBoxItemDefId);
+        Debug.Log($"Player has {boxCount} blind box items (ID: {blindBoxItemDefId})");
+        
+        return (int)boxCount;
     }
     
     private void SetBoxesText(int count)

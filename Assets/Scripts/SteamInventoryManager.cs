@@ -7,6 +7,7 @@ public class SteamInventoryManager : MonoBehaviour
     public static SteamInventoryManager Instance { get; private set; }
     
     private HashSet<int> ownedItemDefIds = new HashSet<int>();
+    private Dictionary<int, uint> itemQuantities = new Dictionary<int, uint>();
     private bool inventoryLoaded = false;
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
@@ -144,12 +145,26 @@ public class SteamInventoryManager : MonoBehaviour
         if (SteamInventory.GetResultItems(pCallback.m_handle, allItems, ref itemCount))
         {
             ownedItemDefIds.Clear();
+            itemQuantities.Clear();
             
             foreach (var item in allItems)
             {
                 int itemDefId = item.m_iDefinition.m_SteamItemDef;
+                uint quantity = item.m_unQuantity;
+                
                 ownedItemDefIds.Add(itemDefId);
-                Debug.Log($"Player owns item: ItemDefID={itemDefId}, Quantity={item.m_unQuantity}");
+                
+                // Add to existing quantity if we already have this itemDefId
+                if (itemQuantities.ContainsKey(itemDefId))
+                {
+                    itemQuantities[itemDefId] += quantity;
+                }
+                else
+                {
+                    itemQuantities[itemDefId] = quantity;
+                }
+                
+                Debug.Log($"Player owns item: ItemDefID={itemDefId}, ItemID={item.m_itemId}, Quantity={quantity}, Total for DefID: {itemQuantities[itemDefId]}");
             }
             
             inventoryLoaded = true;
@@ -192,6 +207,22 @@ public class SteamInventoryManager : MonoBehaviour
     public HashSet<int> GetOwnedItems()
     {
         return new HashSet<int>(ownedItemDefIds);
+    }
+    
+    /// <summary>
+    /// Get the quantity of a specific item owned by the player
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to check</param>
+    /// <returns>The quantity owned, or 0 if not owned</returns>
+    public uint GetItemCount(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return 0;
+        }
+        
+        return itemQuantities.TryGetValue(itemDefId, out uint quantity) ? quantity : 0;
     }
     
     /// <summary>
