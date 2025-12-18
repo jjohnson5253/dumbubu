@@ -348,7 +348,7 @@ GameObject:
   - component: {fileID: 375688778}
   - component: {fileID: 375688780}
   - component: {fileID: 375688779}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -485,7 +485,7 @@ GameObject:
   - component: {fileID: 397196630}
   - component: {fileID: 397196632}
   - component: {fileID: 397196631}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -621,7 +621,7 @@ GameObject:
   - component: {fileID: 456393453}
   - component: {fileID: 456393452}
   - component: {fileID: 456393451}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: GrenadeToggleButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -910,7 +910,7 @@ GameObject:
   - component: {fileID: 556354236}
   - component: {fileID: 556354235}
   - component: {fileID: 556354234}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: CloseButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1142,7 +1142,7 @@ GameObject:
   - component: {fileID: 624257575}
   - component: {fileID: 624257577}
   - component: {fileID: 624257576}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1280,7 +1280,7 @@ GameObject:
   - component: {fileID: 629700975}
   - component: {fileID: 629700974}
   - component: {fileID: 629700973}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BrownButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1401,7 +1401,8 @@ GameObject:
   - component: {fileID: 775829329}
   - component: {fileID: 775829331}
   - component: {fileID: 775829330}
-  m_Layer: 5
+  - component: {fileID: 775829332}
+  m_Layer: 0
   m_Name: MenuPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1474,6 +1475,32 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 775829328}
   m_CullTransparentMesh: 1
+--- !u!61 &775829332
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 775829328}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &911925977
 GameObject:
   m_ObjectHideFlags: 0
@@ -1676,7 +1703,7 @@ GameObject:
   - component: {fileID: 1124346081}
   - component: {fileID: 1124346083}
   - component: {fileID: 1124346082}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1811,7 +1838,7 @@ GameObject:
   - component: {fileID: 1133732287}
   - component: {fileID: 1133732289}
   - component: {fileID: 1133732288}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1949,7 +1976,7 @@ GameObject:
   - component: {fileID: 1200884000}
   - component: {fileID: 1200883999}
   - component: {fileID: 1200883998}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: PinkButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2070,7 +2097,7 @@ GameObject:
   - component: {fileID: 1218137098}
   - component: {fileID: 1218137100}
   - component: {fileID: 1218137099}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: PointsText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2317,7 +2344,7 @@ GameObject:
   - component: {fileID: 1319274678}
   - component: {fileID: 1319274677}
   - component: {fileID: 1319274676}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BlueButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2497,7 +2524,7 @@ GameObject:
   - component: {fileID: 1406855975}
   - component: {fileID: 1406855974}
   - component: {fileID: 1406855973}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: QuitButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2618,7 +2645,7 @@ GameObject:
   - component: {fileID: 1424410565}
   - component: {fileID: 1424410567}
   - component: {fileID: 1424410566}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3125,7 +3152,7 @@ GameObject:
   - component: {fileID: 1902098804}
   - component: {fileID: 1902098803}
   - component: {fileID: 1902098802}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: WhiteButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3357,7 +3384,7 @@ GameObject:
   - component: {fileID: 2134219048}
   - component: {fileID: 2134219050}
   - component: {fileID: 2134219049}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
