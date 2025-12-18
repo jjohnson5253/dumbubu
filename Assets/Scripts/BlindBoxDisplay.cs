@@ -57,10 +57,11 @@ public class BlindBoxDisplay : MonoBehaviour
         // Setup button listeners
         SetupButtonListeners();
         
-        // Setup Steam inventory manager callback
+        // Setup Steam inventory manager callbacks
         if (SteamInventoryManager.Instance != null)
         {
             SteamInventoryManager.Instance.OnExchangeCompleted += OnExchangeCompleted;
+            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryRefreshed;
         }
         
         // Clear reward display initially
@@ -323,6 +324,15 @@ public class BlindBoxDisplay : MonoBehaviour
         }
     }
     
+    private void OnInventoryRefreshed()
+    {
+        // Update boxes count when inventory is refreshed (after exchange)
+        if (blindBoxPanel != null && blindBoxPanel.activeSelf)
+        {
+            UpdateBoxesCount();
+        }
+    }
+    
     private void ShowReward(int itemDefId)
     {
         switch (itemDefId)
@@ -349,9 +359,6 @@ public class BlindBoxDisplay : MonoBehaviour
         if (rewardText != null) rewardText.gameObject.SetActive(true);
         
         Debug.Log($"Reward shown: ItemDefId {itemDefId}");
-        
-        // Update boxes count
-        UpdateBoxesCount();
     }
     
     private void ClearRewardDisplay()
@@ -373,6 +380,7 @@ public class BlindBoxDisplay : MonoBehaviour
         if (SteamInventoryManager.Instance != null)
         {
             SteamInventoryManager.Instance.OnExchangeCompleted -= OnExchangeCompleted;
+            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryRefreshed;
         }
     }
 }
