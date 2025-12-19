@@ -82,6 +82,23 @@ public class BlindBoxDisplay : MonoBehaviour
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
             blindBoxPanel.transform.position = screenPosition;
         }
+        
+        // Handle escape key to close blind box panel
+        if (Input.GetKeyDown(KeyCode.Escape) && IsDisplaying())
+        {
+            HideBlindBoxPanel();
+        }
+        
+        // Handle clicking outside blind box panel to close it
+        if (Input.GetMouseButtonDown(0) && IsDisplaying())
+        {
+            // Check if click is outside the blind box panel
+            RectTransform panelRect = blindBoxPanel.GetComponent<RectTransform>();
+            if (panelRect != null && !RectTransformUtility.RectangleContainsScreenPoint(panelRect, Input.mousePosition))
+            {
+                HideBlindBoxPanel();
+            }
+        }
     }
     
     private void SetupButtonListeners()
