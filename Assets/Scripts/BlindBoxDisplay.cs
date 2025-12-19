@@ -405,7 +405,7 @@ public class BlindBoxDisplay : MonoBehaviour
             // Update open button state
             if (openButton != null)
             {
-                openButton.interactable = boxesCount > 0;
+                openButton.interactable = boxesCount > 0 && blindBoxInstanceIDs.Count > 0;
             }
         }
     }
