@@ -1032,7 +1032,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Drops every 10 minutes
+  m_text: Reward Text
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3697,6 +3697,7 @@ MonoBehaviour:
   rewardText: {fileID: 528202430}
   openButton: {fileID: 1261787150}
   refreshButton: {fileID: 1854418118}
+  blindBoxSprite: {fileID: 21300000, guid: 8c4d63d25eab0f846a6b0d0460720ce4, type: 3}
   whiteInventorySprite: {fileID: 21300000, guid: 255bfe2e83ee99c48b4edd1178864f53, type: 3}
   blueInventorySprite: {fileID: 21300000, guid: 2082179f9715a3e448067426d6b697f2, type: 3}
   pinkInventorySprite: {fileID: 21300000, guid: de29123fe3104794ea0691ee5ea22cd5, type: 3}

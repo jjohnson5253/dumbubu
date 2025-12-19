@@ -18,6 +18,7 @@ public class BlindBoxDisplay : MonoBehaviour
     public Button refreshButton; // Refresh inventory button
     
     [Header("Reward Images")]
+    public Sprite blindBoxSprite; // Default blind box image
     public Sprite whiteInventorySprite;
     public Sprite blueInventorySprite; 
     public Sprite pinkInventorySprite;
@@ -150,8 +151,8 @@ public class BlindBoxDisplay : MonoBehaviour
             Instance.openButton.interactable = Instance.boxesCount > 0;
         }
         
-        // Clear previous reward
-        Instance.ClearRewardDisplay();
+        // Show default blind box display
+        Instance.ShowDefaultDisplay();
     }
     
     public static void HideBlindBoxPanel()
@@ -403,6 +404,20 @@ public class BlindBoxDisplay : MonoBehaviour
         {
             rewardText.text = "";
             rewardText.gameObject.SetActive(false);
+        }
+    }
+    
+    private void ShowDefaultDisplay()
+    {
+        if (rewardImage != null) 
+        {
+            rewardImage.sprite = blindBoxSprite;
+            rewardImage.gameObject.SetActive(true);
+        }
+        if (rewardText != null) 
+        {
+            rewardText.text = "Drops every 10 minutes.";
+            rewardText.gameObject.SetActive(true);
         }
     }
     
