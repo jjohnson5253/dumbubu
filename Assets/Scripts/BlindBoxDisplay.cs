@@ -421,16 +421,59 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void RefreshInventory()
     {
-        Debug.Log("Refresh button pressed - reloading Steam inventory");
+        Debug.Log("Refresh button pressed - starting 10 second cooldown");
         
         if (SteamInventoryManager.Instance != null)
         {
-            reloadRequest = true; // Flag that we want a full reload
-            SteamInventoryManager.Instance.LoadInventory();
+            StartCoroutine(RefreshInventoryCoroutine());
         }
         else
         {
             Debug.LogWarning("SteamInventoryManager.Instance is null - cannot refresh inventory");
+        }
+    }
+    
+    private System.Collections.IEnumerator RefreshInventoryCoroutine()
+    {
+        // Disable refresh button
+        if (refreshButton != null)
+        {
+            refreshButton.interactable = false;
+        }
+        
+        // Spin for 10 seconds
+        Debug.Log("Waiting 10 seconds before refreshing inventory...");
+        float elapsedTime = 0f;
+        float spinDuration = 10f;
+        float spinSpeed = 360f; // degrees per second
+        
+        while (elapsedTime < spinDuration)
+        {
+            // Rotate the refresh button
+            if (refreshButton != null)
+            {
+                refreshButton.transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
+            }
+            
+            elapsedTime += Time.deltaTime;
+            yield return null; // Wait for next frame
+        }
+        
+        // Reset button rotation
+        if (refreshButton != null)
+        {
+            refreshButton.transform.rotation = Quaternion.identity;
+        }
+        
+        // Perform the actual refresh
+        Debug.Log("10 seconds elapsed - reloading Steam inventory");
+        reloadRequest = true; // Flag that we want a full reload
+        SteamInventoryManager.Instance.LoadInventory();
+        
+        // Re-enable refresh button
+        if (refreshButton != null)
+        {
+            refreshButton.interactable = true;
         }
     }
     
