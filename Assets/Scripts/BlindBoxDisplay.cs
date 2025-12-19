@@ -31,6 +31,7 @@ public class BlindBoxDisplay : MonoBehaviour
     private Camera mainCamera;
     private int boxesCount = 0; // Track current box count
     private bool isInitialLoad = true; // Track if this is the first inventory load
+    private bool reloadRequest = false; // Track if manual reload was requested
     private List<SteamItemInstanceID_t> blindBoxInstanceIDs = new List<SteamItemInstanceID_t>(); // Track actual instance IDs
     
     private void Awake()
@@ -424,6 +425,7 @@ public class BlindBoxDisplay : MonoBehaviour
         
         if (SteamInventoryManager.Instance != null)
         {
+            reloadRequest = true; // Flag that we want a full reload
             SteamInventoryManager.Instance.LoadInventory();
         }
         else
@@ -481,12 +483,14 @@ public class BlindBoxDisplay : MonoBehaviour
         {
             int steamBoxCount = GetBlindBoxCount();
             
-            if (isInitialLoad)
+            if (isInitialLoad || reloadRequest)
             {
-                // On first load, always set boxesCount from Steam inventory
-                Debug.Log($"Initial inventory load. Setting boxesCount to {steamBoxCount}");
+                // On first load or manual reload, always set boxesCount from Steam inventory
+                string loadType = isInitialLoad ? "Initial" : "Manual reload";
+                Debug.Log($"{loadType} inventory load. Setting boxesCount to {steamBoxCount}");
                 boxesCount = steamBoxCount;
                 isInitialLoad = false;
+                reloadRequest = false;
                 
                 // Populate instance IDs list
                 blindBoxInstanceIDs.Clear();
