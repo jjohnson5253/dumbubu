@@ -445,7 +445,7 @@ public class BlindBoxDisplay : MonoBehaviour
         Debug.Log("Waiting 10 seconds before refreshing inventory...");
         float elapsedTime = 0f;
         float spinDuration = 10f;
-        float spinSpeed = 360f; // degrees per second
+        float spinSpeed = -360f; // degrees per second (negative for counterclockwise)
         
         while (elapsedTime < spinDuration)
         {
