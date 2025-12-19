@@ -32,8 +32,6 @@ public class BlindBoxDisplay : MonoBehaviour
     private int boxesCount = 0; // Track current box count
     private bool isInitialLoad = true; // Track if this is the first inventory load
     private bool reloadRequest = false; // Track if manual reload was requested
-    private List<SteamItemInstanceID_t> blindBoxInstanceIDs = new List<SteamItemInstanceID_t>(); // Track actual instance IDs
-    private SteamItemInstanceID_t currentExchangeInstanceId = SteamItemInstanceID_t.Invalid; // Track which instance is being used in current exchange
     
     private void Awake()
     {
@@ -241,19 +239,12 @@ public class BlindBoxDisplay : MonoBehaviour
     {
         Debug.Log("Performing real Steam exchange...");
         
-        // Get a blind box instance ID from our tracked list
-        SteamItemInstanceID_t blindBoxInstanceId = SteamItemInstanceID_t.Invalid;
+        // Get a blind box instance ID to consume
+        SteamItemInstanceID_t blindBoxInstanceId = SteamInventoryManager.Instance.GetItemInstance(blindBoxItemDefId);
         
-        if (blindBoxInstanceIDs.Count > 0)
+        if (blindBoxInstanceId == SteamItemInstanceID_t.Invalid)
         {
-            blindBoxInstanceId = blindBoxInstanceIDs[0]; // Use the first available instance
-            currentExchangeInstanceId = blindBoxInstanceId; // Store which instance we're using
-            Debug.Log($"Using tracked blind box instance ID: {blindBoxInstanceId} for exchange");
-        }
-        else
-        {
-            Debug.LogError("No blind box instances available in tracked list for exchange");
-            Debug.Log($"Current tracked instances: {blindBoxInstanceIDs.Count}, boxesCount: {boxesCount}");
+            Debug.LogError("No blind box instances available for exchange");
             // Re-enable button on failure
             if (openButton != null)
             {
@@ -261,6 +252,8 @@ public class BlindBoxDisplay : MonoBehaviour
             }
             return;
         }
+        
+        Debug.Log($"Using blind box instance ID: {blindBoxInstanceId} for exchange");
         
         // Use SteamInventoryManager to perform the exchange
         bool exchangeStarted = SteamInventoryManager.Instance.PerformExchange(generatorItemDefId, blindBoxInstanceId);
@@ -398,39 +391,10 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void DecrementBoxCount()
     {
-        // Decrement the tracked count and check if instance ID should be removed
-        if (boxesCount > 0 && currentExchangeInstanceId != SteamItemInstanceID_t.Invalid)
+        // Decrement the tracked count
+        if (boxesCount > 0)
         {
             boxesCount--;
-            
-            // Get the actual quantity of this specific instance ID
-            bool shouldRemoveInstance = false;
-            if (SteamInventoryManager.Instance != null)
-            {
-                uint instanceQuantity = SteamInventoryManager.Instance.GetInstanceQuantity(currentExchangeInstanceId);
-                Debug.Log($"Instance ID {currentExchangeInstanceId} has quantity: {instanceQuantity}");
-                
-                // If quantity - 1 would be 0 or less, remove the instance from our list
-                if (instanceQuantity <= 1)
-                {
-                    shouldRemoveInstance = true;
-                    Debug.Log($"Instance quantity {instanceQuantity} - 1 = {instanceQuantity - 1}, removing from list");
-                }
-                else
-                {
-                    Debug.Log($"Instance quantity {instanceQuantity} - 1 = {instanceQuantity - 1}, keeping in list");
-                }
-            }
-            
-            // Only remove the instance ID if it has no quantity left
-            if (shouldRemoveInstance)
-            {
-                bool removed = blindBoxInstanceIDs.Remove(currentExchangeInstanceId);
-                Debug.Log($"Removed used blind box instance ID: {currentExchangeInstanceId}. Success: {removed}. Remaining instances: {blindBoxInstanceIDs.Count}");
-            }
-            
-            // Reset the tracked exchange instance
-            currentExchangeInstanceId = SteamItemInstanceID_t.Invalid;
             
             // Update display
             if (boxesText != null)
@@ -514,22 +478,6 @@ public class BlindBoxDisplay : MonoBehaviour
             // Increment our tracked count
             boxesCount++;
             
-            // Add new instance ID to our list (get the latest instances from Steam)
-            if (SteamInventoryManager.Instance != null)
-            {
-                var allInstances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
-                // Add any new instances that we don't already have
-                foreach (var instanceId in allInstances)
-                {
-                    if (!blindBoxInstanceIDs.Contains(instanceId))
-                    {
-                        blindBoxInstanceIDs.Add(instanceId);
-                        Debug.Log($"Added new blind box instance ID: {instanceId}");
-                        break; // Only add one new instance per drop
-                    }
-                }
-            }
-            
             // Update display if panel is active
             if (blindBoxPanel != null && blindBoxPanel.activeSelf)
             {
@@ -561,15 +509,6 @@ public class BlindBoxDisplay : MonoBehaviour
                 boxesCount = steamBoxCount;
                 isInitialLoad = false;
                 reloadRequest = false;
-                
-                // Populate instance IDs list
-                blindBoxInstanceIDs.Clear();
-                if (SteamInventoryManager.Instance != null)
-                {
-                    var instances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
-                    blindBoxInstanceIDs.AddRange(instances);
-                    Debug.Log($"Loaded {blindBoxInstanceIDs.Count} blind box instance IDs");
-                }
                 
                 // Update display if panel is currently active
                 if (blindBoxPanel != null && blindBoxPanel.activeSelf)
