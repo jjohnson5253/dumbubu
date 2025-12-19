@@ -67,7 +67,7 @@ public class MessagesDisplay : MonoBehaviour
     
     public void ShowGrenadeMessage()
     {
-        ShowMessage("Press escape to exit Grenade Mode");
+        ShowMessage("Click anywhere to drop. `Esc` to exit.");
     }
     
     public void ShowMessage(string message)

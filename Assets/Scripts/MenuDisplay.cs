@@ -12,6 +12,7 @@ public class MenuDisplay : MonoBehaviour
     public TextMeshProUGUI pointsText; // "Total: X points"
     public Button grenadeToggleButton; // Grenade mode toggle
     public TextMeshProUGUI grenadeButtonText; // Text on grenade button
+    public TextMeshProUGUI grenadeUnlockText; // "Unlock at X Points" text
     public Button brownButton;
     public Button whiteButton;
     public Button blueButton;
@@ -25,7 +26,7 @@ public class MenuDisplay : MonoBehaviour
     public Vector3 worldPositionOffset = Vector3.up * 3f; // Offset from Dumbubu
     
     private static bool grenadeMode = false;
-    private static int requiredPointsForGrenadeMode = 500;
+    private static int requiredPointsForGrenadeMode = 200;
     private GameObject dumbubu;
     private Camera mainCamera;
     
@@ -302,6 +303,12 @@ public class MenuDisplay : MonoBehaviour
         if (grenadeButtonText != null)
         {
             grenadeButtonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+        }
+        
+        // Hide/show unlock text based on whether grenade mode is unlocked
+        if (grenadeUnlockText != null)
+        {
+            grenadeUnlockText.gameObject.SetActive(!canUseGrenade);
         }
     }
     
