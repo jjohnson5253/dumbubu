@@ -29,6 +29,7 @@ public class BlindBoxDisplay : MonoBehaviour
     private GameObject dumbubu;
     private Camera mainCamera;
     private int boxesCount = 0; // Track current box count
+    private bool isInitialLoad = true; // Track if this is the first inventory load
     
     private void Awake()
     {
@@ -63,6 +64,7 @@ public class BlindBoxDisplay : MonoBehaviour
         {
             SteamInventoryManager.Instance.OnExchangeCompleted += OnExchangeCompleted;
             SteamInventoryManager.Instance.OnItemDropped += OnItemDropped;
+            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryLoaded;
         }
         
         // Clear reward display initially
@@ -111,8 +113,17 @@ public class BlindBoxDisplay : MonoBehaviour
             Instance.blindBoxPanel.SetActive(true);
         }
         
-        // Update boxes count
-        Instance.UpdateBoxesCount();
+        // Display current box count from variable
+        if (Instance.boxesText != null)
+        {
+            Instance.boxesText.text = $"Boxes: {Instance.boxesCount}";
+        }
+        
+        // Update open button state
+        if (Instance.openButton != null)
+        {
+            Instance.openButton.interactable = Instance.boxesCount > 0;
+        }
         
         // Clear previous reward
         Instance.ClearRewardDisplay();
@@ -418,12 +429,69 @@ public class BlindBoxDisplay : MonoBehaviour
         }
     }
     
+    private void OnInventoryLoaded()
+    {
+        if (SteamInventoryManager.Instance != null && SteamInventoryManager.Instance.IsInventoryLoaded())
+        {
+            int steamBoxCount = GetBlindBoxCount();
+            
+            if (isInitialLoad)
+            {
+                // On first load, always set boxesCount from Steam inventory
+                Debug.Log($"Initial inventory load. Setting boxesCount to {steamBoxCount}");
+                boxesCount = steamBoxCount;
+                isInitialLoad = false;
+                
+                // Update display if panel is currently active
+                if (blindBoxPanel != null && blindBoxPanel.activeSelf)
+                {
+                    if (boxesText != null)
+                    {
+                        boxesText.text = $"Boxes: {boxesCount}";
+                    }
+                    
+                    // Update open button state
+                    if (openButton != null)
+                    {
+                        openButton.interactable = boxesCount > 0;
+                    }
+                }
+            }
+            else if (steamBoxCount < boxesCount)
+            {
+                // On subsequent loads, only update if Steam shows fewer boxes
+                Debug.Log($"Steam inventory shows fewer boxes ({steamBoxCount}) than tracked ({boxesCount}). Updating to Steam count.");
+                boxesCount = steamBoxCount;
+                
+                // Update display if panel is currently active
+                if (blindBoxPanel != null && blindBoxPanel.activeSelf)
+                {
+                    if (boxesText != null)
+                    {
+                        boxesText.text = $"Boxes: {boxesCount}";
+                    }
+                    
+                    // Update open button state
+                    if (openButton != null)
+                    {
+                        openButton.interactable = boxesCount > 0;
+                    }
+                }
+            }
+            else
+            {
+                Debug.Log($"Steam inventory shows {steamBoxCount} boxes, tracked count is {boxesCount}. Keeping tracked count.");
+            }
+        }
+    }
+    
     private void OnDestroy()
     {
         if (SteamInventoryManager.Instance != null)
         {
             SteamInventoryManager.Instance.OnExchangeCompleted -= OnExchangeCompleted;
             SteamInventoryManager.Instance.OnItemDropped -= OnItemDropped;
+            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryLoaded;
         }
     }
 }
