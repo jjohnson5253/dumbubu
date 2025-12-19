@@ -255,7 +255,7 @@ public class DragSpriteRigid : MonoBehaviour
             if (animator != null && !animator.GetBool("isFloating"))
             {
                 animator.SetBool("isFloating", true);
-                animator.SetBool("isDancing", false);
+                animator.SetBool("isIdle", false);
             }
             
             yield return null;
@@ -310,7 +310,7 @@ public class DragSpriteRigid : MonoBehaviour
         if (animator != null)
         {
             // Ensure floating animation is set
-            animator.SetBool("isDancing", false);
+            animator.SetBool("isIdle", false);
             animator.SetBool("isFloating", true);
              }
     }
@@ -320,7 +320,7 @@ public class DragSpriteRigid : MonoBehaviour
         if (animator != null)
         {
             animator.SetBool("isFloating", false);
-            animator.SetBool("isDancing", true);
+            animator.SetBool("isIdle", true);
         }
         
         // Smoothly rotate character back to upright position
@@ -365,8 +365,8 @@ public class DragSpriteRigid : MonoBehaviour
             yield return null;
         }
 
-        Debug.Log("Character is still and on ground! Resuming dancing animation.");
-        // Resume dancing animation when stopped and on ground
+        Debug.Log("Character is still and on ground! Resuming idle animation.");
+        // Resume idle animation when stopped and on ground
         ExitRagdollMode();
     }
 
