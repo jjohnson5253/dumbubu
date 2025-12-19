@@ -129,7 +129,7 @@ public class PointsManager : MonoBehaviour
             
             if (success && showPointsInConsole)
             {
-                Debug.Log($"Game saved! Points: {currentPoints}");
+                //Debug.Log($"Game saved! Points: {currentPoints}");
             }
         }
         catch (Exception e)

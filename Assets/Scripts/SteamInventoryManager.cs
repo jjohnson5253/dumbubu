@@ -7,14 +7,18 @@ public class SteamInventoryManager : MonoBehaviour
     public static SteamInventoryManager Instance { get; private set; }
     
     private HashSet<int> ownedItemDefIds = new HashSet<int>();
+    private Dictionary<int, uint> itemQuantities = new Dictionary<int, uint>();
+    private Dictionary<int, List<SteamItemInstanceID_t>> itemInstances = new Dictionary<int, List<SteamItemInstanceID_t>>();
     private bool inventoryLoaded = false;
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
     private SteamInventoryResult_t m_inventoryResult = SteamInventoryResult_t.Invalid;
     private SteamInventoryResult_t m_dropResult = SteamInventoryResult_t.Invalid;
+    private SteamInventoryResult_t m_exchangeResult = SteamInventoryResult_t.Invalid;
     
     public System.Action OnInventoryLoaded;
     public System.Action<int> OnItemDropped; // Called when an item is dropped with the itemDefId
+    public System.Action<int[], bool> OnExchangeCompleted; // Called when an exchange completes (itemDefIds, success)
     
     private void Awake()
     {
@@ -101,6 +105,43 @@ public class SteamInventoryManager : MonoBehaviour
         
         Debug.Log($"Inventory result contains {itemCount} items");
         
+        // Check if this is an exchange result
+        if (pCallback.m_handle == m_exchangeResult)
+        {
+            if (itemCount > 0)
+            {
+                // Get the exchange result items
+                SteamItemDetails_t[] items = new SteamItemDetails_t[itemCount];
+                if (SteamInventory.GetResultItems(pCallback.m_handle, items, ref itemCount))
+                {
+                    // Collect all item def IDs from the exchange result
+                    int[] resultItemDefIds = new int[itemCount];
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        int itemDefId = items[i].m_iDefinition.m_SteamItemDef;
+                        uint quantity = items[i].m_unQuantity;
+                        resultItemDefIds[i] = itemDefId;
+                        Debug.Log($"Exchange result item: ItemDefID={itemDefId}, Quantity={quantity}");
+                    }
+                    
+                    // Pass all item def IDs to the callback
+                    OnExchangeCompleted?.Invoke(resultItemDefIds, true);
+                }
+                
+                // Reload inventory to update counts after exchange
+                LoadInventory();
+            }
+            else
+            {
+                Debug.LogError("Exchange returned no items");
+                OnExchangeCompleted?.Invoke(new int[0], false);
+            }
+            
+            SteamInventory.DestroyResult(pCallback.m_handle);
+            m_exchangeResult = SteamInventoryResult_t.Invalid;
+            return;
+        }
+        
         // Check if this is a drop result (from TriggerItemDrop)
         if (pCallback.m_handle == m_dropResult)
         {
@@ -144,12 +185,35 @@ public class SteamInventoryManager : MonoBehaviour
         if (SteamInventory.GetResultItems(pCallback.m_handle, allItems, ref itemCount))
         {
             ownedItemDefIds.Clear();
+            itemQuantities.Clear();
+            itemInstances.Clear();
             
             foreach (var item in allItems)
             {
                 int itemDefId = item.m_iDefinition.m_SteamItemDef;
+                uint quantity = item.m_unQuantity;
+                SteamItemInstanceID_t instanceId = item.m_itemId;
+                
                 ownedItemDefIds.Add(itemDefId);
-                Debug.Log($"Player owns item: ItemDefID={itemDefId}, Quantity={item.m_unQuantity}");
+                
+                // Add to existing quantity if we already have this itemDefId
+                if (itemQuantities.ContainsKey(itemDefId))
+                {
+                    itemQuantities[itemDefId] += quantity;
+                }
+                else
+                {
+                    itemQuantities[itemDefId] = quantity;
+                }
+                
+                // Store instance IDs for each itemDefId
+                if (!itemInstances.ContainsKey(itemDefId))
+                {
+                    itemInstances[itemDefId] = new List<SteamItemInstanceID_t>();
+                }
+                itemInstances[itemDefId].Add(instanceId);
+                
+                Debug.Log($"Player owns item: ItemDefID={itemDefId}, ItemID={instanceId}, Quantity={quantity}, Total for DefID: {itemQuantities[itemDefId]}");
             }
             
             inventoryLoaded = true;
@@ -195,6 +259,101 @@ public class SteamInventoryManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Get the quantity of a specific item owned by the player
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to check</param>
+    /// <returns>The quantity owned, or 0 if not owned</returns>
+    public uint GetItemCount(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return 0;
+        }
+        
+        return itemQuantities.TryGetValue(itemDefId, out uint quantity) ? quantity : 0;
+    }
+    
+    /// <summary>
+    /// Get a Steam item instance ID for a specific item definition ID
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to get an instance for</param>
+    /// <returns>A Steam item instance ID, or Invalid if none available</returns>
+    public SteamItemInstanceID_t GetItemInstance(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return SteamItemInstanceID_t.Invalid;
+        }
+        
+        if (itemInstances.TryGetValue(itemDefId, out List<SteamItemInstanceID_t> instances) && instances.Count > 0)
+        {
+            return instances[0]; // Return the first available instance
+        }
+        
+        return SteamItemInstanceID_t.Invalid;
+    }
+    
+    /// <summary>
+    /// Get all Steam item instance IDs for a specific item definition ID
+    /// </summary>
+    /// <param name="itemDefId">The item definition ID to get instances for</param>
+    /// <returns>List of Steam item instance IDs</returns>
+    public List<SteamItemInstanceID_t> GetItemInstances(int itemDefId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return new List<SteamItemInstanceID_t>();
+        }
+        
+        return itemInstances.TryGetValue(itemDefId, out List<SteamItemInstanceID_t> instances) ? 
+               new List<SteamItemInstanceID_t>(instances) : new List<SteamItemInstanceID_t>();
+    }
+    
+    /// <summary>
+    /// Perform a Steam inventory exchange
+    /// </summary>
+    /// <param name="generatorItemDefId">The generator item definition ID</param>
+    /// <param name="materialInstanceId">The material item instance ID to consume</param>
+    /// <returns>True if exchange was initiated successfully</returns>
+    public bool PerformExchange(int generatorItemDefId, SteamItemInstanceID_t materialInstanceId)
+    {
+        if (!SteamManager.Initialized)
+        {
+            Debug.LogWarning("Cannot perform exchange - Steam not initialized");
+            return false;
+        }
+        
+        if (materialInstanceId == SteamItemInstanceID_t.Invalid)
+        {
+            Debug.LogError("Invalid material instance ID for exchange");
+            return false;
+        }
+        
+        Debug.Log($"Performing Steam exchange with generator {generatorItemDefId} and material instance {materialInstanceId}");
+        
+        // Recipe: generator creates random rewards from consumed material
+        SteamItemDef_t[] recipe = new SteamItemDef_t[] { new SteamItemDef_t(generatorItemDefId) };
+        uint[] recipeQuantities = new uint[] { 1 };
+        SteamItemInstanceID_t[] materials = new SteamItemInstanceID_t[] { materialInstanceId };
+        uint[] materialQuantities = new uint[] { 1 };
+        
+        // Perform the exchange
+        if (SteamInventory.ExchangeItems(out m_exchangeResult, recipe, recipeQuantities, 1, materials, materialQuantities, 1))
+        {
+            Debug.Log("Steam exchange initiated successfully - waiting for callback");
+            return true;
+        }
+        else
+        {
+            Debug.LogError("Failed to initiate Steam exchange");
+            return false;
+        }
+    }
+    
+    /// <summary>
     /// Trigger a playtime item drop. Call this at significant game moments (end of level, match, etc.)
     /// </summary>
     /// <param name="playtimeGeneratorDefId">The itemdefid of the "playtimegenerator" type item</param>
@@ -230,6 +389,11 @@ public class SteamInventoryManager : MonoBehaviour
         if (m_dropResult != SteamInventoryResult_t.Invalid)
         {
             SteamInventory.DestroyResult(m_dropResult);
+        }
+        
+        if (m_exchangeResult != SteamInventoryResult_t.Invalid)
+        {
+            SteamInventory.DestroyResult(m_exchangeResult);
         }
     }
 }

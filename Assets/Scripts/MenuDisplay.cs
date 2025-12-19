@@ -1,503 +1,291 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public class MenuDisplay : MonoBehaviour
 {
-    private static GameObject canvasObject;
-    private static Canvas canvas;
-    private static GameObject currentMenuDisplay; // Track the current display
-    private static bool grenadeMode = false;
-    private static int requiredPointsForGrenadeMode = 500;
+    public static MenuDisplay Instance { get; private set; }
     
-    /// <summary>
-    /// Check if a menu display is currently showing
-    /// </summary>
-    public static bool IsDisplaying()
+    [Header("UI References")]
+    public GameObject menuPanel; // The main menu container
+    public TextMeshProUGUI pointsText; // "Total: X points"
+    public Button grenadeToggleButton; // Grenade mode toggle
+    public TextMeshProUGUI grenadeButtonText; // Text on grenade button
+    public Button brownButton;
+    public Button whiteButton;
+    public Button blueButton;
+    public Button pinkButton;
+    public Button blindBoxButton; // Blind box button
+    public Button closeButton; // X button
+    public Button quitButton;
+    
+    [Header("Settings")]
+    public Vector3 worldPositionOffset = Vector3.up * 3f; // Offset from Dumbubu
+    
+    private static bool grenadeMode = false;
+    private static int requiredPointsForGrenadeMode = 1;
+    private GameObject dumbubu;
+    private Camera mainCamera;
+    
+    private void Awake()
     {
-        return currentMenuDisplay != null;
+        // Singleton pattern
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
     
-    /// <summary>
-    /// Check if grenade mode is enabled
-    /// </summary>
+    private void Start()
+    {
+        mainCamera = Camera.main;
+        dumbubu = GameObject.Find("Dumbubu");
+        
+        // Hide menu panel initially
+        if (menuPanel != null)
+        {
+            menuPanel.SetActive(false);
+        }
+        
+        // Setup button listeners
+        SetupButtonListeners();
+        
+        // Initialize grenade mode state
+        UpdateGrenadeButton();
+    }
+    
+    private void Update()
+    {
+        // Position menu above Dumbubu when active
+        if (menuPanel != null && menuPanel.activeSelf && dumbubu != null && mainCamera != null)
+        {
+            Vector3 worldPosition = dumbubu.transform.position + worldPositionOffset;
+            Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+            menuPanel.transform.position = screenPosition;
+        }
+        
+        // Handle escape key to close menu
+        if (Input.GetKeyDown(KeyCode.Escape) && IsDisplaying())
+        {
+            HideMenu();
+            if (grenadeMode)
+            {
+                DisableGrenadeMode();
+            }
+        }
+        
+        // Handle clicking outside menu to close it
+        if (Input.GetMouseButtonDown(0) && IsDisplaying())
+        {
+            // Check if click is outside the menu panel
+            RectTransform menuRect = menuPanel.GetComponent<RectTransform>();
+            if (menuRect != null && !RectTransformUtility.RectangleContainsScreenPoint(menuRect, Input.mousePosition))
+            {
+                HideMenu();
+            }
+        }
+    }
+    
+    private void SetupButtonListeners()
+    {
+        // Grenade toggle button
+        if (grenadeToggleButton != null)
+        {
+            grenadeToggleButton.onClick.AddListener(() => {
+                if (CanUseGrenadeMode())
+                {
+                    ToggleGrenadeMode();
+                }
+            });
+        }
+        
+        // Color buttons
+        if (brownButton != null)
+        {
+            brownButton.onClick.AddListener(() => SwitchColor(DumbubuColor.Brown));
+        }
+        
+        if (whiteButton != null)
+        {
+            whiteButton.onClick.AddListener(() => SwitchColor(DumbubuColor.White));
+        }
+        
+        if (blueButton != null)
+        {
+            blueButton.onClick.AddListener(() => SwitchColor(DumbubuColor.Blue));
+        }
+        
+        if (pinkButton != null)
+        {
+            pinkButton.onClick.AddListener(() => SwitchColor(DumbubuColor.Pink));
+        }
+        
+        // Blind box button
+        if (blindBoxButton != null)
+        {
+            blindBoxButton.onClick.AddListener(() => BlindBoxDisplay.ShowBlindBoxPanel());
+        }
+        
+        // Close button
+        if (closeButton != null)
+        {
+            closeButton.onClick.AddListener(HideMenu);
+        }
+        
+        // Quit button
+        if (quitButton != null)
+        {
+            quitButton.onClick.AddListener(() => {
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
+            });
+        }
+    }
+    
+    private void SwitchColor(DumbubuColor color)
+    {
+        if (TextureSwitcher.Instance != null)
+        {
+            TextureSwitcher.Instance.SwitchColor(color);
+        }
+    }
+    
+    public static void ShowMenu(Vector3 worldPosition, int points)
+    {
+        if (Instance == null) return;
+        
+        // Don't show if already displaying
+        if (IsDisplaying()) return;
+        
+        // Update points display
+        if (Instance.pointsText != null)
+        {
+            Instance.pointsText.text = $"Total: {points} points";
+        }
+        
+        // Update button states
+        Instance.UpdateButtonStates();
+        
+        // Show the menu panel
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(true);
+        }
+    }
+    
+    public static void HideMenu()
+    {
+        if (Instance == null) return;
+        
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(false);
+        }
+        
+        // Show grenade mode message if grenade mode is active
+        if (grenadeMode && MessagesDisplay.Instance != null)
+        {
+            MessagesDisplay.Instance.ShowGrenadeMessage();
+        }
+    }
+    
+    public static void ShowMenuPanel()
+    {
+        if (Instance == null) return;
+        
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(true);
+        }
+    }
+    
+    public static void HideMenuPanel()
+    {
+        if (Instance == null) return;
+        
+        if (Instance.menuPanel != null)
+        {
+            Instance.menuPanel.SetActive(false);
+        }
+    }
+    
+    public static bool IsDisplaying()
+    {
+        return Instance != null && Instance.menuPanel != null && Instance.menuPanel.activeSelf;
+    }
+    
     public static bool IsGrenadeModeEnabled()
     {
         return grenadeMode;
     }
     
-    /// <summary>
-    /// Toggle grenade mode on/off
-    /// </summary>
     public static void ToggleGrenadeMode()
     {
         grenadeMode = !grenadeMode;
         Debug.Log($"Grenade mode: {(grenadeMode ? "ON" : "OFF")}");
+        
+        if (Instance != null)
+        {
+            Instance.UpdateGrenadeButton();
+        }
     }
     
-    /// <summary>
-    /// Disable grenade mode
-    /// </summary>
     public static void DisableGrenadeMode()
     {
         grenadeMode = false;
         Debug.Log("Grenade mode: OFF (disabled by escape key)");
-    }
-    
-    /// <summary>
-    /// Clear the current display reference (called when display is destroyed)
-    /// </summary>
-    public static void ClearCurrentDisplay()
-    {
-        currentMenuDisplay = null;
-    }
-    
-    /// <summary>
-    /// Show menu display at a world position
-    /// </summary>
-    public static void ShowMenu(Vector3 worldPosition, int points)
-    {
-        // Don't create a new display if one already exists
-        if (currentMenuDisplay != null)
+        
+        if (Instance != null)
         {
-            return;
+            Instance.UpdateGrenadeButton();
         }
-        
-        // Create canvas if it doesn't exist
-        if (canvas == null)
-        {
-            CreateCanvas();
-        }
-        
-        // Create the menu container
-        GameObject textObj = new GameObject("MenuDisplay");
-        textObj.transform.SetParent(canvas.transform);
-        currentMenuDisplay = textObj; // Store reference
-        
-        // Add grey background box
-        Image background = textObj.AddComponent<Image>();
-        background.color = new Color(0.3f, 0.3f, 0.3f, 0.9f); // Grey with slight transparency
-        
-        // Create child object for the text
-        GameObject textChild = new GameObject("PointsText");
-        textChild.transform.SetParent(textObj.transform);
-        
-        // Add regular UI Text component (more compatible)
-        Text uiText = textChild.AddComponent<Text>();
-        uiText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        uiText.fontSize = 22; // 30% smaller (32 * 0.7 = 22.4)
-        uiText.color = Color.yellow;
-        uiText.alignment = TextAnchor.MiddleCenter;
-        uiText.fontStyle = FontStyle.Bold;
-        
-        // Add outline for better visibility
-        Outline outline = textChild.AddComponent<Outline>();
-        outline.effectColor = Color.black;
-        outline.effectDistance = new Vector2(2, -2);
-        
-        // Position points text above grenade button
-        RectTransform textRect = textChild.GetComponent<RectTransform>();
-        textRect.anchorMin = new Vector2(0.5f, 0f);
-        textRect.anchorMax = new Vector2(0.5f, 0f);
-        textRect.pivot = new Vector2(0.5f, 0f);
-        textRect.anchoredPosition = new Vector2(0, 205); // Above grenade button
-        textRect.sizeDelta = new Vector2(250, 40);
-        
-        // Set text content
-        uiText.text = $"Total: {points} points";
-        
-        Debug.Log($"Showing points: {points}");
-        
-        // Position and size the container box
-        RectTransform rectTransform = textObj.GetComponent<RectTransform>();
-        
-        // Set anchors to bottom-left for consistent positioning
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.zero;
-        rectTransform.pivot = new Vector2(0.5f, 0.55f);
-        
-        // Set size
-        rectTransform.sizeDelta = new Vector2(300, 260); // Increased height for grenade button
-        
-        // Convert world position to screen position and set anchored position
-        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
-        rectTransform.anchoredPosition = new Vector2(screenPos.x, screenPos.y + 340); // Offset above the sprite
-        
-        // Reset scale to ensure it's not affected by parent scaling
-        rectTransform.localScale = Vector3.one;
-        
-        // Create grenade mode toggle button
-        CreateGrenadeModeButton(textObj);
-        
-        // Create buttons container
-        CreateColorButtons(textObj);
-        
-        // Create close button in top-right corner
-        CreateCloseButton(textObj);
-        
-        // Create quit button at the bottom
-        CreateQuitButton(textObj);
-        
-        // Add the click-to-dismiss component
-        ClickToDismiss clickHandler = textObj.AddComponent<ClickToDismiss>();
-        clickHandler.Initialize();
     }
     
-    private static void CreateGrenadeModeButton(GameObject parent)
+    private bool CanUseGrenadeMode()
     {
-        GameObject grenadeModeButtonObj = new GameObject("GrenadeModeButton");
-        grenadeModeButtonObj.transform.SetParent(parent.transform);
-        
-        RectTransform grenadeModeRect = grenadeModeButtonObj.AddComponent<RectTransform>();
-        grenadeModeRect.anchorMin = new Vector2(0.5f, 0f);
-        grenadeModeRect.anchorMax = new Vector2(0.5f, 0f);
-        grenadeModeRect.pivot = new Vector2(0.5f, 0f);
-        grenadeModeRect.anchoredPosition = new Vector2(0, 160); // Above color buttons
-        grenadeModeRect.sizeDelta = new Vector2(200, 35);
-        
-        // Add button background
-        Image buttonBg = grenadeModeButtonObj.AddComponent<Image>();
-        buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
-        
-        // Check if grenade mode is available
-        bool isGrenadeModeAvailable = PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= requiredPointsForGrenadeMode;
-        
-        // Add Button component
-        Button button = grenadeModeButtonObj.AddComponent<Button>();
-        button.targetGraphic = buttonBg;
-        button.interactable = isGrenadeModeAvailable;
-        
-        // Set button colors
-        ColorBlock colors = button.colors;
-        colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
-        colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
-        colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
-        colors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        button.colors = colors;
-        
-        // Add click listener to toggle grenade mode and update button appearance
-        button.onClick.AddListener(() => {
-            ToggleGrenadeMode();
-            // Update button color to reflect new state
-            buttonBg.color = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
-            colors.normalColor = grenadeMode ? new Color(0.2f, 0.6f, 0.2f, 1f) : new Color(0.2f, 0.2f, 0.2f, 1f);
-            colors.highlightedColor = grenadeMode ? new Color(0.3f, 0.7f, 0.3f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f);
-            colors.pressedColor = grenadeMode ? new Color(0.15f, 0.5f, 0.15f, 1f) : new Color(0.15f, 0.15f, 0.15f, 1f);
-            button.colors = colors;
-            
-            // Update button text
-            Text buttonText = grenadeModeButtonObj.GetComponentInChildren<Text>();
-            if (buttonText != null)
-            {
-                buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
-            }
-        });
-        
-        // Create button text
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(grenadeModeButtonObj.transform);
-        
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-        
-        Text buttonText = textObj.AddComponent<Text>();
-        buttonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
-        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        buttonText.fontSize = 16;
-        buttonText.color = isGrenadeModeAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
-        buttonText.alignment = TextAnchor.MiddleCenter;
-        buttonText.fontStyle = FontStyle.Bold;
+        return PointsManager.Instance != null && PointsManager.Instance.GetPoints() >= requiredPointsForGrenadeMode;
     }
     
-    private static void CreateColorButtons(GameObject parent)
+    private void UpdateButtonStates()
     {
-        // Create buttons container
-        GameObject buttonsContainer = new GameObject("ButtonsContainer");
-        buttonsContainer.transform.SetParent(parent.transform);
+        // Update color button availability
+        UpdateColorButton(brownButton, DumbubuColor.Brown);
+        UpdateColorButton(whiteButton, DumbubuColor.White);
+        UpdateColorButton(blueButton, DumbubuColor.Blue);
+        UpdateColorButton(pinkButton, DumbubuColor.Pink);
         
-        RectTransform buttonsRect = buttonsContainer.AddComponent<RectTransform>();
-        buttonsRect.anchorMin = new Vector2(0, 0);
-        buttonsRect.anchorMax = new Vector2(1, 0);
-        buttonsRect.pivot = new Vector2(0.5f, 0);
-        buttonsRect.anchoredPosition = new Vector2(0, 100);
-        buttonsRect.sizeDelta = new Vector2(-20, 40);
-        
-        // Create Brown button
-        CreateButton(buttonsContainer, "Brown", new Vector2(-80, 0), DumbubuColor.Brown, () => {
-            if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Brown);
-        });
-        
-        // Create White button
-        CreateButton(buttonsContainer, "White", new Vector2(80, 0), DumbubuColor.White, () => {
-            if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(DumbubuColor.White);
-        });
-
-        // Create Blue button
-        CreateButton(buttonsContainer, "Blue", new Vector2(-80, -50), DumbubuColor.Blue, () => {
-            if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Blue);
-        });
-
-        // Create Pink button
-        CreateButton(buttonsContainer, "Pink", new Vector2(80, -50), DumbubuColor.Pink, () => {
-            if (TextureSwitcher.Instance != null)
-                TextureSwitcher.Instance.SwitchColor(DumbubuColor.Pink);
-        });
+        // Update grenade button
+        UpdateGrenadeButton();
     }
     
-    private static void CreateCloseButton(GameObject parent)
+    private void UpdateColorButton(Button button, DumbubuColor color)
     {
-        GameObject closeButtonObj = new GameObject("CloseButton");
-        closeButtonObj.transform.SetParent(parent.transform);
+        if (button == null) return;
         
-        RectTransform closeButtonRect = closeButtonObj.AddComponent<RectTransform>();
-        closeButtonRect.anchorMin = new Vector2(1f, 1f); // Top-right corner
-        closeButtonRect.anchorMax = new Vector2(1f, 1f);
-        closeButtonRect.pivot = new Vector2(1f, 1f);
-        closeButtonRect.anchoredPosition = new Vector2(-5, -5); // 5 pixel margin from edges
-        closeButtonRect.sizeDelta = new Vector2(25, 25); // Small square button
-        
-        // Add button background
-        Image buttonBg = closeButtonObj.AddComponent<Image>();
-        buttonBg.color = new Color(0.8f, 0.2f, 0.2f, 0.9f); // Red background
-        
-        // Add Button component
-        Button button = closeButtonObj.AddComponent<Button>();
-        button.targetGraphic = buttonBg;
-        
-        // Set button colors for hover effects
-        ColorBlock colors = button.colors;
-        colors.normalColor = new Color(0.8f, 0.2f, 0.2f, 0.9f);
-        colors.highlightedColor = new Color(1f, 0.3f, 0.3f, 1f);
-        colors.pressedColor = new Color(0.6f, 0.1f, 0.1f, 1f);
-        button.colors = colors;
-        
-        // Add click listener to close the menu
-        button.onClick.AddListener(() => {
-            if (currentMenuDisplay != null)
-            {
-                Destroy(currentMenuDisplay);
-            }
-        });
-        
-        // Create "X" text
-        GameObject textObj = new GameObject("XText");
-        textObj.transform.SetParent(closeButtonObj.transform);
-        
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-        
-        Text buttonText = textObj.AddComponent<Text>();
-        buttonText.text = "×"; // Using multiplication symbol for a cleaner X
-        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        buttonText.fontSize = 18;
-        buttonText.color = Color.white;
-        buttonText.alignment = TextAnchor.MiddleCenter;
-        buttonText.fontStyle = FontStyle.Bold;
-    }
-    
-    private static void CreateQuitButton(GameObject parent)
-    {
-        GameObject quitButtonObj = new GameObject("QuitButton");
-        quitButtonObj.transform.SetParent(parent.transform);
-        
-        RectTransform quitButtonRect = quitButtonObj.AddComponent<RectTransform>();
-        quitButtonRect.anchorMin = new Vector2(0.5f, 0f); // Bottom center
-        quitButtonRect.anchorMax = new Vector2(0.5f, 0f);
-        quitButtonRect.pivot = new Vector2(0.5f, 0f);
-        quitButtonRect.anchoredPosition = new Vector2(0, 10); // 10 pixel margin from bottom
-        quitButtonRect.sizeDelta = new Vector2(100, 30); // Rectangular button
-        
-        // Add button background
-        Image buttonBg = quitButtonObj.AddComponent<Image>();
-        buttonBg.color = new Color(0.6f, 0.2f, 0.2f, 0.9f); // Dark red background
-        
-        // Add Button component
-        Button button = quitButtonObj.AddComponent<Button>();
-        button.targetGraphic = buttonBg;
-        
-        // Set button colors for hover effects
-        ColorBlock colors = button.colors;
-        colors.normalColor = new Color(0.6f, 0.2f, 0.2f, 0.9f);
-        colors.highlightedColor = new Color(0.8f, 0.3f, 0.3f, 1f);
-        colors.pressedColor = new Color(0.4f, 0.1f, 0.1f, 1f);
-        button.colors = colors;
-        
-        // Add click listener to quit the game
-        button.onClick.AddListener(() => {
-            Debug.Log("Quit button clicked - closing application");
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
-        });
-        
-        // Create "Quit" text
-        GameObject textObj = new GameObject("QuitText");
-        textObj.transform.SetParent(quitButtonObj.transform);
-        
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-        
-        Text buttonText = textObj.AddComponent<Text>();
-        buttonText.text = "Quit";
-        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        buttonText.fontSize = 16;
-        buttonText.color = Color.white;
-        buttonText.alignment = TextAnchor.MiddleCenter;
-        buttonText.fontStyle = FontStyle.Bold;
-    }
-    
-    private static void CreateButton(GameObject parent, string label, Vector2 position, DumbubuColor color, System.Action onClick)
-    {
-        GameObject buttonObj = new GameObject(label + "Button");
-        buttonObj.transform.SetParent(parent.transform);
-        
-        RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
-        buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
-        buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
-        buttonRect.pivot = new Vector2(0.5f, 0.5f);
-        buttonRect.anchoredPosition = position;
-        buttonRect.sizeDelta = new Vector2(120, 35);
-        
-        // Add button background
-        Image buttonBg = buttonObj.AddComponent<Image>();
-        buttonBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-        
-        // Add Button component
-        Button button = buttonObj.AddComponent<Button>();
-        button.targetGraphic = buttonBg;
-        
-        // Set button colors
-        ColorBlock colors = button.colors;
-        colors.normalColor = new Color(0.2f, 0.2f, 0.2f, 1f);
-        colors.highlightedColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-        colors.pressedColor = new Color(0.15f, 0.15f, 0.15f, 1f);
-        button.colors = colors;
-        
-        // Add click listener
-        button.onClick.AddListener(() => onClick());
-        
-        // Create button text
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(buttonObj.transform);
-        
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = Vector2.zero;
-        textRect.offsetMax = Vector2.zero;
-        
-        Text buttonText = textObj.AddComponent<Text>();
-        buttonText.text = label;
-        buttonText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        buttonText.fontSize = 18;
-        
-        // Check if color is available and grey out if locked
         bool isAvailable = TextureSwitcher.Instance != null && TextureSwitcher.Instance.IsColorAvailable(color);
-        buttonText.color = isAvailable ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
-        buttonText.alignment = TextAnchor.MiddleCenter;
-        buttonText.fontStyle = FontStyle.Bold;
-        
-        // Disable button if not available
         button.interactable = isAvailable;
     }
     
-    private static void CreateCanvas()
+    private void UpdateGrenadeButton()
     {
-        canvasObject = new GameObject("MenuCanvas");
-        canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 1000; // Make sure it's on top
+        if (grenadeToggleButton == null) return;
         
-        // Don't use CanvasScaler to avoid scaling issues
+        bool canUseGrenade = CanUseGrenadeMode();
+        grenadeToggleButton.interactable = canUseGrenade;
         
-        DontDestroyOnLoad(canvasObject);
-        
-        Debug.Log("MenuCanvas created!");
-    }
-}
-
-/// <summary>
-/// Handles click-to-dismiss functionality for floating text
-/// </summary>
-public class ClickToDismiss : MonoBehaviour
-{
-    private RectTransform rectTransform;
-    private GraphicRaycaster raycaster;
-    
-    public void Initialize()
-    {
-        rectTransform = GetComponent<RectTransform>();
-        
-        // Add GraphicRaycaster to canvas if it doesn't exist
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas != null)
+        // Update button text
+        if (grenadeButtonText != null)
         {
-            raycaster = canvas.GetComponent<GraphicRaycaster>();
-            if (raycaster == null)
-            {
-                raycaster = canvas.gameObject.AddComponent<GraphicRaycaster>();
-            }
-        }
-    }
-    
-    private void Update()
-    {
-        // Check for mouse click
-        if (Input.GetMouseButtonDown(0))
-        {
-            // Check if we clicked on a button first
-            if (IsPointerOverButton())
-            {
-                return; // Don't dismiss if clicking a button
-            }
-            
-            // Check if click is outside the main container
-            if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition))
-            {
-                // Click was outside, destroy this text
-                Destroy(gameObject);
-            }
-        }
-    }
-    
-    private bool IsPointerOverButton()
-    {
-        // Check if mouse is over any button (including close button)
-        Button[] buttons = GetComponentsInChildren<Button>();
-        foreach (Button button in buttons)
-        {
-            RectTransform buttonRect = button.GetComponent<RectTransform>();
-            if (RectTransformUtility.RectangleContainsScreenPoint(buttonRect, Input.mousePosition))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private void OnDestroy()
-    {
-        // Clear the reference when destroyed
-        MenuDisplay.ClearCurrentDisplay();
-        
-        // Show grenade mode message if grenade mode is active
-        if (MenuDisplay.IsGrenadeModeEnabled() && MessagesDisplay.Instance != null)
-        {
-            MessagesDisplay.Instance.ShowGrenadeMessage();
+            grenadeButtonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
         }
     }
 }
-
