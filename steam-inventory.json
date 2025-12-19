@@ -19,7 +19,8 @@
       "description": "Contains random dumbubu",
       "icon_url": "https://i.ibb.co/dwhKTvXf/blindbox-hd-best.png",
       "tradable": false,
-      "marketable": false
+      "marketable": false,
+      "auto_stack": true
     },
     {
       "itemdefid": 69422,
