@@ -16,6 +16,7 @@ public class BlindBoxDisplay : MonoBehaviour
     public TextMeshProUGUI rewardText; // Shows reward item name
     public Button openButton; // Open blind box button
     public Button refreshButton; // Refresh inventory button
+    public Button marketButton; // Steam Market button
     
     [Header("Reward Images")]
     public Sprite blindBoxSprite; // Default blind box image
@@ -123,6 +124,12 @@ public class BlindBoxDisplay : MonoBehaviour
         if (refreshButton != null)
         {
             refreshButton.onClick.AddListener(RefreshInventory);
+        }
+        
+        // Market button
+        if (marketButton != null)
+        {
+            marketButton.onClick.AddListener(OpenSteamMarket);
         }
     }
     
@@ -251,6 +258,13 @@ public class BlindBoxDisplay : MonoBehaviour
         
         // Call the real Steam exchange
         PerformSteamExchange();
+    }
+    
+    private void OpenSteamMarket()
+    {
+        string marketUrl = "steam://openurl/https://steamcommunity.com/market/search?appid=4160160";
+        Debug.Log($"Opening Steam Market: {marketUrl}");
+        Application.OpenURL(marketUrl);
     }
     
     private void PerformSteamExchange()
