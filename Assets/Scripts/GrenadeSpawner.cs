@@ -32,8 +32,8 @@ public class GrenadeSpawner : MonoBehaviour
             return;
         }
 
-        // Don't spawn if clicking on the menu display
-        if (MenuDisplay.IsDisplaying())
+        // Don't spawn if clicking on the menu display or blind box display
+        if (MenuDisplay.IsDisplaying() || BlindBoxDisplay.IsDisplaying())
         {
             return;
         }

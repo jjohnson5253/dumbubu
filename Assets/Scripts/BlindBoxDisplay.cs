@@ -16,8 +16,10 @@ public class BlindBoxDisplay : MonoBehaviour
     public TextMeshProUGUI rewardText; // Shows reward item name
     public Button openButton; // Open blind box button
     public Button refreshButton; // Refresh inventory button
+    public Button marketButton; // Steam Market button
     
     [Header("Reward Images")]
+    public Sprite blindBoxSprite; // Default blind box image
     public Sprite whiteInventorySprite;
     public Sprite blueInventorySprite; 
     public Sprite pinkInventorySprite;
@@ -32,7 +34,6 @@ public class BlindBoxDisplay : MonoBehaviour
     private int boxesCount = 0; // Track current box count
     private bool isInitialLoad = true; // Track if this is the first inventory load
     private bool reloadRequest = false; // Track if manual reload was requested
-    private List<SteamItemInstanceID_t> blindBoxInstanceIDs = new List<SteamItemInstanceID_t>(); // Track actual instance IDs
     
     private void Awake()
     {
@@ -83,6 +84,23 @@ public class BlindBoxDisplay : MonoBehaviour
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
             blindBoxPanel.transform.position = screenPosition;
         }
+        
+        // Handle escape key to close blind box panel
+        if (Input.GetKeyDown(KeyCode.Escape) && IsDisplaying())
+        {
+            HideBlindBoxPanel();
+        }
+        
+        // Handle clicking outside blind box panel to close it
+        if (Input.GetMouseButtonDown(0) && IsDisplaying())
+        {
+            // Check if click is outside the blind box panel
+            RectTransform panelRect = blindBoxPanel.GetComponent<RectTransform>();
+            if (panelRect != null && !RectTransformUtility.RectangleContainsScreenPoint(panelRect, Input.mousePosition))
+            {
+                HideBlindBoxPanel();
+            }
+        }
     }
     
     private void SetupButtonListeners()
@@ -106,6 +124,12 @@ public class BlindBoxDisplay : MonoBehaviour
         if (refreshButton != null)
         {
             refreshButton.onClick.AddListener(RefreshInventory);
+        }
+        
+        // Market button
+        if (marketButton != null)
+        {
+            marketButton.onClick.AddListener(OpenSteamMarket);
         }
     }
     
@@ -134,8 +158,8 @@ public class BlindBoxDisplay : MonoBehaviour
             Instance.openButton.interactable = Instance.boxesCount > 0;
         }
         
-        // Clear previous reward
-        Instance.ClearRewardDisplay();
+        // Show default blind box display
+        Instance.ShowDefaultDisplay();
     }
     
     public static void HideBlindBoxPanel()
@@ -236,21 +260,23 @@ public class BlindBoxDisplay : MonoBehaviour
         PerformSteamExchange();
     }
     
+    private void OpenSteamMarket()
+    {
+        string marketUrl = "steam://openurl/https://steamcommunity.com/market/search?appid=4160160";
+        Debug.Log($"Opening Steam Market: {marketUrl}");
+        Application.OpenURL(marketUrl);
+    }
+    
     private void PerformSteamExchange()
     {
         Debug.Log("Performing real Steam exchange...");
         
-        // Get a blind box instance ID from our tracked list
-        SteamItemInstanceID_t blindBoxInstanceId = SteamItemInstanceID_t.Invalid;
+        // Get a blind box instance ID to consume
+        SteamItemInstanceID_t blindBoxInstanceId = SteamInventoryManager.Instance.GetItemInstance(blindBoxItemDefId);
         
-        if (blindBoxInstanceIDs.Count > 0)
+        if (blindBoxInstanceId == SteamItemInstanceID_t.Invalid)
         {
-            blindBoxInstanceId = blindBoxInstanceIDs[0]; // Use the first available instance
-            Debug.Log($"Using tracked blind box instance ID: {blindBoxInstanceId} for exchange");
-        }
-        else
-        {
-            Debug.LogError("No blind box instances available in tracked list for exchange");
+            Debug.LogError("No blind box instances available for exchange");
             // Re-enable button on failure
             if (openButton != null)
             {
@@ -258,6 +284,8 @@ public class BlindBoxDisplay : MonoBehaviour
             }
             return;
         }
+        
+        Debug.Log($"Using blind box instance ID: {blindBoxInstanceId} for exchange");
         
         // Use SteamInventoryManager to perform the exchange
         bool exchangeStarted = SteamInventoryManager.Instance.PerformExchange(generatorItemDefId, blindBoxInstanceId);
@@ -393,17 +421,26 @@ public class BlindBoxDisplay : MonoBehaviour
         }
     }
     
+    private void ShowDefaultDisplay()
+    {
+        if (rewardImage != null) 
+        {
+            rewardImage.sprite = blindBoxSprite;
+            rewardImage.gameObject.SetActive(true);
+        }
+        if (rewardText != null) 
+        {
+            rewardText.text = "Drops every 10 minutes.";
+            rewardText.gameObject.SetActive(true);
+        }
+    }
+    
     private void DecrementBoxCount()
     {
-        // Decrement the tracked count and remove used instance ID
-        if (boxesCount > 0 && blindBoxInstanceIDs.Count > 0)
+        // Decrement the tracked count
+        if (boxesCount > 0)
         {
             boxesCount--;
-            
-            // Remove the instance ID that was used in the exchange
-            var usedInstanceId = blindBoxInstanceIDs[0];
-            blindBoxInstanceIDs.RemoveAt(0);
-            Debug.Log($"Removed used blind box instance ID: {usedInstanceId}. Remaining instances: {blindBoxInstanceIDs.Count}");
             
             // Update display
             if (boxesText != null)
@@ -421,61 +458,10 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void RefreshInventory()
     {
-        Debug.Log("Refresh button pressed - starting 10 second cooldown");
-        
-        if (SteamInventoryManager.Instance != null)
-        {
-            StartCoroutine(RefreshInventoryCoroutine());
-        }
-        else
-        {
-            Debug.LogWarning("SteamInventoryManager.Instance is null - cannot refresh inventory");
-        }
+        InventoryRefreshController.RefreshInventory(this, refreshButton, "BlindBox: ", () => reloadRequest = true);
     }
     
-    private System.Collections.IEnumerator RefreshInventoryCoroutine()
-    {
-        // Disable refresh button
-        if (refreshButton != null)
-        {
-            refreshButton.interactable = false;
-        }
-        
-        // Spin for 10 seconds
-        Debug.Log("Waiting 10 seconds before refreshing inventory...");
-        float elapsedTime = 0f;
-        float spinDuration = 10f;
-        float spinSpeed = -360f; // degrees per second (negative for counterclockwise)
-        
-        while (elapsedTime < spinDuration)
-        {
-            // Rotate the refresh button
-            if (refreshButton != null)
-            {
-                refreshButton.transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
-            }
-            
-            elapsedTime += Time.deltaTime;
-            yield return null; // Wait for next frame
-        }
-        
-        // Reset button rotation
-        if (refreshButton != null)
-        {
-            refreshButton.transform.rotation = Quaternion.identity;
-        }
-        
-        // Perform the actual refresh
-        Debug.Log("10 seconds elapsed - reloading Steam inventory");
-        reloadRequest = true; // Flag that we want a full reload
-        SteamInventoryManager.Instance.LoadInventory();
-        
-        // Re-enable refresh button
-        if (refreshButton != null)
-        {
-            refreshButton.interactable = true;
-        }
-    }
+
     
     private void OnItemDropped(int itemDefId)
     {
@@ -486,22 +472,6 @@ public class BlindBoxDisplay : MonoBehaviour
             
             // Increment our tracked count
             boxesCount++;
-            
-            // Add new instance ID to our list (get the latest instances from Steam)
-            if (SteamInventoryManager.Instance != null)
-            {
-                var allInstances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
-                // Add any new instances that we don't already have
-                foreach (var instanceId in allInstances)
-                {
-                    if (!blindBoxInstanceIDs.Contains(instanceId))
-                    {
-                        blindBoxInstanceIDs.Add(instanceId);
-                        Debug.Log($"Added new blind box instance ID: {instanceId}");
-                        break; // Only add one new instance per drop
-                    }
-                }
-            }
             
             // Update display if panel is active
             if (blindBoxPanel != null && blindBoxPanel.activeSelf)
@@ -534,15 +504,6 @@ public class BlindBoxDisplay : MonoBehaviour
                 boxesCount = steamBoxCount;
                 isInitialLoad = false;
                 reloadRequest = false;
-                
-                // Populate instance IDs list
-                blindBoxInstanceIDs.Clear();
-                if (SteamInventoryManager.Instance != null)
-                {
-                    var instances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
-                    blindBoxInstanceIDs.AddRange(instances);
-                    Debug.Log($"Loaded {blindBoxInstanceIDs.Count} blind box instance IDs");
-                }
                 
                 // Update display if panel is currently active
                 if (blindBoxPanel != null && blindBoxPanel.activeSelf)

@@ -17,6 +17,7 @@ public class MenuDisplay : MonoBehaviour
     public Button blueButton;
     public Button pinkButton;
     public Button blindBoxButton; // Blind box button
+    public Button refreshButton; // Refresh inventory button
     public Button closeButton; // X button
     public Button quitButton;
     
@@ -55,6 +56,12 @@ public class MenuDisplay : MonoBehaviour
         
         // Setup button listeners
         SetupButtonListeners();
+        
+        // Subscribe to inventory loaded events
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryLoaded;
+        }
         
         // Initialize grenade mode state
         UpdateGrenadeButton();
@@ -132,6 +139,12 @@ public class MenuDisplay : MonoBehaviour
             blindBoxButton.onClick.AddListener(() => BlindBoxDisplay.ShowBlindBoxPanel());
         }
         
+        // Refresh button
+        if (refreshButton != null)
+        {
+            refreshButton.onClick.AddListener(RefreshInventory);
+        }
+        
         // Close button
         if (closeButton != null)
         {
@@ -201,6 +214,9 @@ public class MenuDisplay : MonoBehaviour
     public static void ShowMenuPanel()
     {
         if (Instance == null) return;
+        
+        // Update button states to refresh available skins
+        Instance.UpdateButtonStates();
         
         if (Instance.menuPanel != null)
         {
@@ -286,6 +302,25 @@ public class MenuDisplay : MonoBehaviour
         if (grenadeButtonText != null)
         {
             grenadeButtonText.text = grenadeMode ? "Grenade Mode: ON" : "Grenade Mode: OFF";
+        }
+    }
+    
+    private void RefreshInventory()
+    {
+        InventoryRefreshController.RefreshInventory(this, refreshButton, "Menu: ");
+    }
+    
+    private void OnInventoryLoaded()
+    {
+        Debug.Log("MenuDisplay: Inventory loaded, updating button states");
+        UpdateButtonStates();
+    }
+    
+    private void OnDestroy()
+    {
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryLoaded;
         }
     }
 }
