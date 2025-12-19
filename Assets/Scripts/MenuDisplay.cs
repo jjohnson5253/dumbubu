@@ -57,6 +57,12 @@ public class MenuDisplay : MonoBehaviour
         // Setup button listeners
         SetupButtonListeners();
         
+        // Subscribe to inventory loaded events
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded += OnInventoryLoaded;
+        }
+        
         // Initialize grenade mode state
         UpdateGrenadeButton();
     }
@@ -301,8 +307,20 @@ public class MenuDisplay : MonoBehaviour
     
     private void RefreshInventory()
     {
-        InventoryRefreshController.RefreshInventory(this, refreshButton, "Menu: ", null, () => UpdateButtonStates());
+        InventoryRefreshController.RefreshInventory(this, refreshButton, "Menu: ");
     }
     
-
+    private void OnInventoryLoaded()
+    {
+        Debug.Log("MenuDisplay: Inventory loaded, updating button states");
+        UpdateButtonStates();
+    }
+    
+    private void OnDestroy()
+    {
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.OnInventoryLoaded -= OnInventoryLoaded;
+        }
+    }
 }

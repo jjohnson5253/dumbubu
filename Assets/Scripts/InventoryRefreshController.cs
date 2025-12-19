@@ -65,8 +65,8 @@ public static class InventoryRefreshController
         Debug.Log($"{debugPrefix}10 seconds elapsed - reloading Steam inventory");
         SteamInventoryManager.Instance.LoadInventory();
         
-        // Execute optional post-refresh action (e.g., updating UI buttons)
-        onRefreshComplete?.Invoke();
+        // Note: Don't call onRefreshComplete here as LoadInventory() is async
+        // The inventory loaded callbacks will handle UI updates when loading actually completes
         
         // Re-enable refresh button
         if (refreshButton != null)
