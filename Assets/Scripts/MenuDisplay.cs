@@ -25,7 +25,7 @@ public class MenuDisplay : MonoBehaviour
     public Vector3 worldPositionOffset = Vector3.up * 3f; // Offset from Dumbubu
     
     private static bool grenadeMode = false;
-    private static int requiredPointsForGrenadeMode = 1;
+    private static int requiredPointsForGrenadeMode = 500;
     private GameObject dumbubu;
     private Camera mainCamera;
     
