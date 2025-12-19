@@ -398,14 +398,36 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void DecrementBoxCount()
     {
-        // Decrement the tracked count and remove used instance ID
+        // Decrement the tracked count and check if instance ID should be removed
         if (boxesCount > 0 && currentExchangeInstanceId != SteamItemInstanceID_t.Invalid)
         {
             boxesCount--;
             
-            // Remove the specific instance ID that was used in the exchange
-            bool removed = blindBoxInstanceIDs.Remove(currentExchangeInstanceId);
-            Debug.Log($"Removed used blind box instance ID: {currentExchangeInstanceId}. Success: {removed}. Remaining instances: {blindBoxInstanceIDs.Count}");
+            // Get the actual quantity of this specific instance ID
+            bool shouldRemoveInstance = false;
+            if (SteamInventoryManager.Instance != null)
+            {
+                uint instanceQuantity = SteamInventoryManager.Instance.GetInstanceQuantity(currentExchangeInstanceId);
+                Debug.Log($"Instance ID {currentExchangeInstanceId} has quantity: {instanceQuantity}");
+                
+                // If quantity - 1 would be 0 or less, remove the instance from our list
+                if (instanceQuantity <= 1)
+                {
+                    shouldRemoveInstance = true;
+                    Debug.Log($"Instance quantity {instanceQuantity} - 1 = {instanceQuantity - 1}, removing from list");
+                }
+                else
+                {
+                    Debug.Log($"Instance quantity {instanceQuantity} - 1 = {instanceQuantity - 1}, keeping in list");
+                }
+            }
+            
+            // Only remove the instance ID if it has no quantity left
+            if (shouldRemoveInstance)
+            {
+                bool removed = blindBoxInstanceIDs.Remove(currentExchangeInstanceId);
+                Debug.Log($"Removed used blind box instance ID: {currentExchangeInstanceId}. Success: {removed}. Remaining instances: {blindBoxInstanceIDs.Count}");
+            }
             
             // Reset the tracked exchange instance
             currentExchangeInstanceId = SteamItemInstanceID_t.Invalid;
@@ -419,7 +441,7 @@ public class BlindBoxDisplay : MonoBehaviour
             // Update open button state
             if (openButton != null)
             {
-                openButton.interactable = boxesCount > 0 && blindBoxInstanceIDs.Count > 0;
+                openButton.interactable = boxesCount > 0;
             }
         }
     }

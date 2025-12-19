@@ -9,6 +9,7 @@ public class SteamInventoryManager : MonoBehaviour
     private HashSet<int> ownedItemDefIds = new HashSet<int>();
     private Dictionary<int, uint> itemQuantities = new Dictionary<int, uint>();
     private Dictionary<int, List<SteamItemInstanceID_t>> itemInstances = new Dictionary<int, List<SteamItemInstanceID_t>>();
+    private Dictionary<SteamItemInstanceID_t, uint> instanceQuantities = new Dictionary<SteamItemInstanceID_t, uint>();
     private bool inventoryLoaded = false;
     
     private Callback<SteamInventoryResultReady_t> m_SteamInventoryResultReady;
@@ -187,6 +188,7 @@ public class SteamInventoryManager : MonoBehaviour
             ownedItemDefIds.Clear();
             itemQuantities.Clear();
             itemInstances.Clear();
+            instanceQuantities.Clear();
             
             foreach (var item in allItems)
             {
@@ -212,6 +214,9 @@ public class SteamInventoryManager : MonoBehaviour
                     itemInstances[itemDefId] = new List<SteamItemInstanceID_t>();
                 }
                 itemInstances[itemDefId].Add(instanceId);
+                
+                // Store individual instance quantities
+                instanceQuantities[instanceId] = quantity;
                 
                 Debug.Log($"Player owns item: ItemDefID={itemDefId}, ItemID={instanceId}, Quantity={quantity}, Total for DefID: {itemQuantities[itemDefId]}");
             }
@@ -310,6 +315,22 @@ public class SteamInventoryManager : MonoBehaviour
         
         return itemInstances.TryGetValue(itemDefId, out List<SteamItemInstanceID_t> instances) ? 
                new List<SteamItemInstanceID_t>(instances) : new List<SteamItemInstanceID_t>();
+    }
+    
+    /// <summary>
+    /// Get the quantity of a specific item instance ID
+    /// </summary>
+    /// <param name="instanceId">The item instance ID to check</param>
+    /// <returns>The quantity of this instance, or 0 if not found</returns>
+    public uint GetInstanceQuantity(SteamItemInstanceID_t instanceId)
+    {
+        if (!inventoryLoaded)
+        {
+            Debug.LogWarning("Inventory not loaded yet");
+            return 0;
+        }
+        
+        return instanceQuantities.TryGetValue(instanceId, out uint quantity) ? quantity : 0;
     }
     
     /// <summary>
