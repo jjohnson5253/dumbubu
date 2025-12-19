@@ -301,7 +301,7 @@ public class MenuDisplay : MonoBehaviour
     
     private void RefreshInventory()
     {
-        InventoryRefreshController.RefreshInventory(this, refreshButton, "Menu: ");
+        InventoryRefreshController.RefreshInventory(this, refreshButton, "Menu: ", null, () => UpdateButtonStates());
     }
     
 

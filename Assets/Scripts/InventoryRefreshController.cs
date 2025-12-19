@@ -11,13 +11,14 @@ public static class InventoryRefreshController
     /// <param name="refreshButton">The refresh button to animate and disable</param>
     /// <param name="debugPrefix">Prefix for debug messages to identify which panel is refreshing</param>
     /// <param name="onRefreshStart">Optional action to execute before starting the refresh (e.g., setting flags)</param>
-    public static void RefreshInventory(MonoBehaviour monoBehaviour, Button refreshButton, string debugPrefix = "", System.Action onRefreshStart = null)
+    /// <param name="onRefreshComplete">Optional action to execute after the refresh is complete (e.g., updating UI)</param>
+    public static void RefreshInventory(MonoBehaviour monoBehaviour, Button refreshButton, string debugPrefix = "", System.Action onRefreshStart = null, System.Action onRefreshComplete = null)
     {
         Debug.Log($"{debugPrefix}Refresh button pressed - starting 10 second cooldown");
         
         if (SteamInventoryManager.Instance != null)
         {
-            monoBehaviour.StartCoroutine(RefreshInventoryCoroutine(refreshButton, debugPrefix, onRefreshStart));
+            monoBehaviour.StartCoroutine(RefreshInventoryCoroutine(refreshButton, debugPrefix, onRefreshStart, onRefreshComplete));
         }
         else
         {
@@ -25,7 +26,7 @@ public static class InventoryRefreshController
         }
     }
     
-    private static System.Collections.IEnumerator RefreshInventoryCoroutine(Button refreshButton, string debugPrefix, System.Action onRefreshStart = null)
+    private static System.Collections.IEnumerator RefreshInventoryCoroutine(Button refreshButton, string debugPrefix, System.Action onRefreshStart = null, System.Action onRefreshComplete = null)
     {
         // Disable refresh button
         if (refreshButton != null)
@@ -63,6 +64,9 @@ public static class InventoryRefreshController
         // Perform the actual refresh
         Debug.Log($"{debugPrefix}10 seconds elapsed - reloading Steam inventory");
         SteamInventoryManager.Instance.LoadInventory();
+        
+        // Execute optional post-refresh action (e.g., updating UI buttons)
+        onRefreshComplete?.Invoke();
         
         // Re-enable refresh button
         if (refreshButton != null)
