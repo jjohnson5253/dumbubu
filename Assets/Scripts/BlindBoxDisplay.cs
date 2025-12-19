@@ -33,6 +33,7 @@ public class BlindBoxDisplay : MonoBehaviour
     private bool isInitialLoad = true; // Track if this is the first inventory load
     private bool reloadRequest = false; // Track if manual reload was requested
     private List<SteamItemInstanceID_t> blindBoxInstanceIDs = new List<SteamItemInstanceID_t>(); // Track actual instance IDs
+    private SteamItemInstanceID_t currentExchangeInstanceId = SteamItemInstanceID_t.Invalid; // Track which instance is being used in current exchange
     
     private void Awake()
     {
@@ -246,11 +247,13 @@ public class BlindBoxDisplay : MonoBehaviour
         if (blindBoxInstanceIDs.Count > 0)
         {
             blindBoxInstanceId = blindBoxInstanceIDs[0]; // Use the first available instance
+            currentExchangeInstanceId = blindBoxInstanceId; // Store which instance we're using
             Debug.Log($"Using tracked blind box instance ID: {blindBoxInstanceId} for exchange");
         }
         else
         {
             Debug.LogError("No blind box instances available in tracked list for exchange");
+            Debug.Log($"Current tracked instances: {blindBoxInstanceIDs.Count}, boxesCount: {boxesCount}");
             // Re-enable button on failure
             if (openButton != null)
             {
@@ -396,14 +399,16 @@ public class BlindBoxDisplay : MonoBehaviour
     private void DecrementBoxCount()
     {
         // Decrement the tracked count and remove used instance ID
-        if (boxesCount > 0 && blindBoxInstanceIDs.Count > 0)
+        if (boxesCount > 0 && currentExchangeInstanceId != SteamItemInstanceID_t.Invalid)
         {
             boxesCount--;
             
-            // Remove the instance ID that was used in the exchange
-            var usedInstanceId = blindBoxInstanceIDs[0];
-            blindBoxInstanceIDs.RemoveAt(0);
-            Debug.Log($"Removed used blind box instance ID: {usedInstanceId}. Remaining instances: {blindBoxInstanceIDs.Count}");
+            // Remove the specific instance ID that was used in the exchange
+            bool removed = blindBoxInstanceIDs.Remove(currentExchangeInstanceId);
+            Debug.Log($"Removed used blind box instance ID: {currentExchangeInstanceId}. Success: {removed}. Remaining instances: {blindBoxInstanceIDs.Count}");
+            
+            // Reset the tracked exchange instance
+            currentExchangeInstanceId = SteamItemInstanceID_t.Invalid;
             
             // Update display
             if (boxesText != null)
@@ -414,7 +419,7 @@ public class BlindBoxDisplay : MonoBehaviour
             // Update open button state
             if (openButton != null)
             {
-                openButton.interactable = boxesCount > 0;
+                openButton.interactable = boxesCount > 0 && blindBoxInstanceIDs.Count > 0;
             }
         }
     }
