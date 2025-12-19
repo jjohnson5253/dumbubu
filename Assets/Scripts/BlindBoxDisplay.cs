@@ -15,6 +15,7 @@ public class BlindBoxDisplay : MonoBehaviour
     public Image rewardImage; // Shows reward item image
     public TextMeshProUGUI rewardText; // Shows reward item name
     public Button openButton; // Open blind box button
+    public Button refreshButton; // Refresh inventory button
     
     [Header("Reward Images")]
     public Sprite whiteInventorySprite;
@@ -97,6 +98,12 @@ public class BlindBoxDisplay : MonoBehaviour
         if (openButton != null)
         {
             openButton.onClick.AddListener(OpenBlindBox);
+        }
+        
+        // Refresh button
+        if (refreshButton != null)
+        {
+            refreshButton.onClick.AddListener(RefreshInventory);
         }
     }
     
@@ -399,6 +406,20 @@ public class BlindBoxDisplay : MonoBehaviour
             {
                 openButton.interactable = boxesCount > 0;
             }
+        }
+    }
+    
+    private void RefreshInventory()
+    {
+        Debug.Log("Refresh button pressed - reloading Steam inventory");
+        
+        if (SteamInventoryManager.Instance != null)
+        {
+            SteamInventoryManager.Instance.LoadInventory();
+        }
+        else
+        {
+            Debug.LogWarning("SteamInventoryManager.Instance is null - cannot refresh inventory");
         }
     }
     
