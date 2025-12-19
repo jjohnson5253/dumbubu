@@ -31,6 +31,7 @@ public class BlindBoxDisplay : MonoBehaviour
     private Camera mainCamera;
     private int boxesCount = 0; // Track current box count
     private bool isInitialLoad = true; // Track if this is the first inventory load
+    private List<SteamItemInstanceID_t> blindBoxInstanceIDs = new List<SteamItemInstanceID_t>(); // Track actual instance IDs
     
     private void Awake()
     {
@@ -238,12 +239,17 @@ public class BlindBoxDisplay : MonoBehaviour
     {
         Debug.Log("Performing real Steam exchange...");
         
-        // Get a blind box instance ID to consume
-        SteamItemInstanceID_t blindBoxInstanceId = SteamInventoryManager.Instance.GetItemInstance(blindBoxItemDefId);
+        // Get a blind box instance ID from our tracked list
+        SteamItemInstanceID_t blindBoxInstanceId = SteamItemInstanceID_t.Invalid;
         
-        if (blindBoxInstanceId == SteamItemInstanceID_t.Invalid)
+        if (blindBoxInstanceIDs.Count > 0)
         {
-            Debug.LogError("No blind box instances available for exchange");
+            blindBoxInstanceId = blindBoxInstanceIDs[0]; // Use the first available instance
+            Debug.Log($"Using tracked blind box instance ID: {blindBoxInstanceId} for exchange");
+        }
+        else
+        {
+            Debug.LogError("No blind box instances available in tracked list for exchange");
             // Re-enable button on failure
             if (openButton != null)
             {
@@ -251,8 +257,6 @@ public class BlindBoxDisplay : MonoBehaviour
             }
             return;
         }
-        
-        Debug.Log($"Using blind box instance ID: {blindBoxInstanceId} for exchange");
         
         // Use SteamInventoryManager to perform the exchange
         bool exchangeStarted = SteamInventoryManager.Instance.PerformExchange(generatorItemDefId, blindBoxInstanceId);
@@ -390,10 +394,15 @@ public class BlindBoxDisplay : MonoBehaviour
     
     private void DecrementBoxCount()
     {
-        // Decrement the tracked count
-        if (boxesCount > 0)
+        // Decrement the tracked count and remove used instance ID
+        if (boxesCount > 0 && blindBoxInstanceIDs.Count > 0)
         {
             boxesCount--;
+            
+            // Remove the instance ID that was used in the exchange
+            var usedInstanceId = blindBoxInstanceIDs[0];
+            blindBoxInstanceIDs.RemoveAt(0);
+            Debug.Log($"Removed used blind box instance ID: {usedInstanceId}. Remaining instances: {blindBoxInstanceIDs.Count}");
             
             // Update display
             if (boxesText != null)
@@ -433,6 +442,22 @@ public class BlindBoxDisplay : MonoBehaviour
             // Increment our tracked count
             boxesCount++;
             
+            // Add new instance ID to our list (get the latest instances from Steam)
+            if (SteamInventoryManager.Instance != null)
+            {
+                var allInstances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
+                // Add any new instances that we don't already have
+                foreach (var instanceId in allInstances)
+                {
+                    if (!blindBoxInstanceIDs.Contains(instanceId))
+                    {
+                        blindBoxInstanceIDs.Add(instanceId);
+                        Debug.Log($"Added new blind box instance ID: {instanceId}");
+                        break; // Only add one new instance per drop
+                    }
+                }
+            }
+            
             // Update display if panel is active
             if (blindBoxPanel != null && blindBoxPanel.activeSelf)
             {
@@ -462,6 +487,15 @@ public class BlindBoxDisplay : MonoBehaviour
                 Debug.Log($"Initial inventory load. Setting boxesCount to {steamBoxCount}");
                 boxesCount = steamBoxCount;
                 isInitialLoad = false;
+                
+                // Populate instance IDs list
+                blindBoxInstanceIDs.Clear();
+                if (SteamInventoryManager.Instance != null)
+                {
+                    var instances = SteamInventoryManager.Instance.GetItemInstances(blindBoxItemDefId);
+                    blindBoxInstanceIDs.AddRange(instances);
+                    Debug.Log($"Loaded {blindBoxInstanceIDs.Count} blind box instance IDs");
+                }
                 
                 // Update display if panel is currently active
                 if (blindBoxPanel != null && blindBoxPanel.activeSelf)
