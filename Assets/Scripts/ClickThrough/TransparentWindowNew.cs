@@ -24,6 +24,7 @@ public class TransparentWindowNew : MonoBehaviour
     private bool clickThrough = true;
     private bool prevClickThrough = false;
 
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
     private struct MARGINS
     {
         public int cxLeftWidth;
@@ -59,10 +60,25 @@ public class TransparentWindowNew : MonoBehaviour
     private const int GWL_EXSTYLE = -0x14;
     private const int WS_EX_TOOLWINDOW = 0x0080;
 
-    int fWidth;
-    int fHeight;
-    IntPtr hwnd;
-    MARGINS margins;
+    private int fWidth;
+    private int fHeight;
+    private IntPtr hwnd;
+    private MARGINS margins;
+#endif
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+    [DllImport("TransparentWindowMac")]
+    private static extern int TransparentWindowMac_Configure(int clickThrough);
+
+    [DllImport("TransparentWindowMac")]
+    private static extern int TransparentWindowMac_SetClickThrough(int clickThrough);
+
+    [DllImport("TransparentWindowMac")]
+    private static extern int TransparentWindowMac_GetMousePosition(out float normalizedX, out float normalizedY);
+
+    private bool macWindowConfigured;
+    private int macConfigurationFramesRemaining = 120;
+#endif
 
     void Start()
     {
@@ -73,8 +89,7 @@ public class TransparentWindowNew : MonoBehaviour
         clickThrough = true;
         prevClickThrough = false;
 
-        #if !UNITY_EDITOR // You really don't want to enable this in the editor..
-
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR // You really don't want to enable this in the editor.
         fWidth = Screen.width;
         fHeight = Screen.height;
         margins = new MARGINS() { cxLeftWidth = -1 };
@@ -86,8 +101,18 @@ public class TransparentWindowNew : MonoBehaviour
         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, fWidth, fHeight, 32 | 64); //SWP_FRAMECHANGED = 0x0020 (32); //SWP_SHOWWINDOW = 0x0040 (64)
         DwmExtendFrameIntoClientArea(hwnd, ref margins);
         SetWindowLong(hwnd, GWL_EXSTYLE, (uint)GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW);  
+#elif UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        // A native macOS full-screen window lives in its own Space, whose backdrop is
+        // black even when the window is transparent. Use a borderless desktop window.
+        Screen.fullScreenMode = FullScreenMode.Windowed;
+        // Match the Windows startup behavior: begin interactive, then let the first
+        // hit test decide whether the window should become click-through.
+        macWindowConfigured = TransparentWindowMac_Configure(0) != 0;
+#endif
+
+#if !UNITY_EDITOR
         Application.runInBackground = true;
-        #endif
+#endif
     }
 
     void Update ()
@@ -115,28 +140,56 @@ public class TransparentWindowNew : MonoBehaviour
         if (clickThrough != prevClickThrough) {
             if (clickThrough) {
                 //Debug.Log("ClickThrough");
-                #if !UNITY_EDITOR
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
                 SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
                 SetWindowLong (hwnd, -20, (uint)524288 | (uint)32);//GWL_EXSTYLE=-20; WS_EX_LAYERED=524288=&h80000, WS_EX_TRANSPARENT=32=0x00000020L
                 SetLayeredWindowAttributes (hwnd, 0, 255, 2);// Transparency=51=20%, LWA_ALPHA=2
                 SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, fWidth, fHeight, 32 | 64); //SWP_FRAMECHANGED = 0x0020 (32); //SWP_SHOWWINDOW = 0x0040 (64)
                 SetWindowLong(hwnd, GWL_EXSTYLE, (uint)GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW);  
-                #endif
+#elif UNITY_STANDALONE_OSX && !UNITY_EDITOR
+                macWindowConfigured = TransparentWindowMac_SetClickThrough(1) != 0;
+#endif
             } else {
                 //Debug.Log("Not ClickThrough");
-                #if !UNITY_EDITOR
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
                 SetWindowLong (hwnd, -20, ~(((uint)524288) | ((uint)32)));//GWL_EXSTYLE=-20; WS_EX_LAYERED=524288=&h80000, WS_EX_TRANSPARENT=32=0x00000020L
                 SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, fWidth, fHeight, 32 | 64); //SWP_FRAMECHANGED = 0x0020 (32); //SWP_SHOWWINDOW = 0x0040 (64)
                 SetWindowLong(hwnd, GWL_EXSTYLE, (uint)GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TOOLWINDOW);  
-                #endif
+#elif UNITY_STANDALONE_OSX && !UNITY_EDITOR
+                macWindowConfigured = TransparentWindowMac_SetClickThrough(0) != 0;
+#endif
             }
             prevClickThrough = clickThrough;
         }
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        // Unity can replace/configure its Metal layer during the first few rendered
+        // frames. Reapply briefly so our non-opaque setting wins after initialization.
+        if (!macWindowConfigured || macConfigurationFramesRemaining > 0)
+        {
+            macWindowConfigured = TransparentWindowMac_Configure(clickThrough ? 1 : 0) != 0;
+            if (macWindowConfigured && macConfigurationFramesRemaining > 0)
+            {
+                macConfigurationFramesRemaining--;
+            }
+        }
+#endif
     }
     
     private bool HitTestByRaycast()
     {
         var position = Input.mousePosition;
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        // A click-through NSWindow does not receive mouse-move events. Poll AppKit's
+        // event-independent cursor position so the pet can become interactive again.
+        if (macWindowConfigured &&
+            TransparentWindowMac_GetMousePosition(out float normalizedX, out float normalizedY) != 0)
+        {
+            position.x = normalizedX * Screen.width;
+            position.y = normalizedY * Screen.height;
+        }
+#endif
 
         // // uGUIの上か否かを判定
         var raycastResults = new List<RaycastResult>();
