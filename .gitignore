@@ -73,3 +73,8 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 .DS_Store
+
+# Standalone C# verification output
+/Tests/**/bin/
+/Tests/**/obj/
+!/Tests/**/*.csproj
