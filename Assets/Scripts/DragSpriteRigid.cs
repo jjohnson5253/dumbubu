@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class DragSpriteRigid : MonoBehaviour
 {
@@ -151,6 +152,11 @@ public class DragSpriteRigid : MonoBehaviour
 
         // Only check for drag start on mouse down, not every frame
         if (!Input.GetMouseButtonDown(0))
+        {
+            return;
+        }
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
         }

@@ -57,6 +57,11 @@ public class MenuDisplay : MonoBehaviour
         
         // Setup button listeners
         SetupButtonListeners();
+
+        if (menuPanel != null && dumbubu != null)
+        {
+            gameObject.AddComponent<DumbubuSpeechController>().Initialize(this, dumbubu.transform);
+        }
         
         // Subscribe to inventory loaded events
         if (SteamInventoryManager.Instance != null)
@@ -75,6 +80,12 @@ public class MenuDisplay : MonoBehaviour
         {
             Vector3 worldPosition = dumbubu.transform.position + worldPositionOffset;
             Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+            // Keep the expanded menu accessible even when Dumbubu is at a screen edge.
+            RectTransform panelRect = menuPanel.GetComponent<RectTransform>();
+            Canvas canvas = menuPanel.GetComponentInParent<Canvas>();
+            Vector2 halfSize = panelRect.rect.size * (canvas != null ? canvas.scaleFactor : 1f) * 0.5f;
+            screenPosition.x = Mathf.Clamp(screenPosition.x, halfSize.x, Mathf.Max(halfSize.x, Screen.width - halfSize.x));
+            screenPosition.y = Mathf.Clamp(screenPosition.y, halfSize.y, Mathf.Max(halfSize.y, Screen.height - halfSize.y));
             menuPanel.transform.position = screenPosition;
         }
         
