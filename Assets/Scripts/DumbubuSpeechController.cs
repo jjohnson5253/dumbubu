@@ -19,12 +19,12 @@ public sealed class DumbubuSpeechController : MonoBehaviour
     private string selectedClient;
     private readonly Queue<string> recentLines = new Queue<string>();
     private CancellationTokenSource operation;
-    private Button connectButton, accountButton, speechButton;
+    private Button connectButton, accountButton, speechButton, testButton;
     private TMP_Text titleLabel, connectLabel, accountLabel, speechLabel, statusLabel, bubbleText;
     private GameObject bubbleCanvas;
     private RectTransform bubble;
-    private bool busy, speaking, muted, shuttingDown;
-    private float nextSpeech, visibleUntil;
+    private bool busy, speaking, muted, shuttingDown, speechPaused, pendingBubble;
+    private float nextSpeech, visibleUntil, bubbleDuration;
     private int failures;
 
     public void Initialize(MenuDisplay menu, Transform dumbubu)
@@ -47,7 +47,7 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         {
             statusLabel.text = "ChatGPT setup could not be loaded. Check the skill file and local account storage.";
         }
-        nextSpeech = Time.unscaledTime + SpeechInterval;
+        nextSpeech = Time.unscaledTime + (client != null && client.Connected ? 1f : SpeechInterval);
         RefreshControls();
     }
 
@@ -55,16 +55,27 @@ public sealed class DumbubuSpeechController : MonoBehaviour
     {
         var panel = menu.menuPanel.GetComponent<RectTransform>();
         // Make room below the existing controls without changing their relative layout.
-        foreach (RectTransform child in panel) child.anchoredPosition += Vector2.up * 125f;
-        panel.sizeDelta += Vector2.up * 250f;
-        titleLabel = Label(panel, "Dumbubu's thoughts", new Vector2(0, -64), new Vector2(310, 28), 19);
-        connectButton = MakeButton(panel, "Continue with ChatGPT", -100, out connectLabel);
-        accountButton = MakeButton(panel, "Account: new ChatGPT account", -139, out accountLabel);
-        speechButton = MakeButton(panel, "Speech: on", -178, out speechLabel);
-        statusLabel = Label(panel, "", new Vector2(0, -235), new Vector2(310, 70), 14);
+        foreach (RectTransform child in panel) child.anchoredPosition += Vector2.up * 165f;
+        panel.sizeDelta += Vector2.up * 330f;
+        titleLabel = Label(panel, "Dumbubu's thoughts", new Vector2(0, -24), new Vector2(310, 28), 19);
+        connectButton = MakeButton(panel, "Continue with ChatGPT", -60, out connectLabel);
+        accountButton = MakeButton(panel, "Account: new ChatGPT account", -99, out accountLabel);
+        speechButton = MakeButton(panel, "Speech: on", -138, out speechLabel);
+        TMP_Text unused;
+        testButton = MakeButton(panel, "Test speech now", -177, out unused);
+        var usageButton = MakeButton(panel, "ChatGPT Usage settings", -216, out unused);
+        statusLabel = Label(panel, "", new Vector2(0, -278), new Vector2(310, 76), 14);
         connectButton.onClick.AddListener(() => { if (busy) operation?.Cancel(); else _ = ChangeConnectionAsync(); });
         accountButton.onClick.AddListener(ChooseNextAccount);
         speechButton.onClick.AddListener(ToggleSpeech);
+        testButton.onClick.AddListener(() =>
+        {
+            speechPaused = false;
+            failures = 0;
+            MenuDisplay.HideMenu();
+            _ = SpeakAsync();
+        });
+        usageButton.onClick.AddListener(() => Application.OpenURL("https://chatgpt.com/settings/usage"));
     }
 
     private Button MakeButton(RectTransform parent, string text, float y, out TMP_Text label)
@@ -120,15 +131,22 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         var background = obj.GetComponent<Image>();
         background.color = new Color(0.08f, 0.10f, 0.13f, 0.96f);
         background.raycastTarget = false;
-        bubbleText = Label(bubble, "", new Vector2(0, 43), new Vector2(302, 66), 19);
+        bubbleText = Label(bubble, "", Vector2.zero, new Vector2(302, 66), 19);
         bubbleCanvas.SetActive(false);
     }
 
     private void Update()
     {
         if (client == null || pet == null) return;
-        bool visible = Time.unscaledTime < visibleUntil && !muted && client.Connected && !busy &&
-            !MenuDisplay.IsDisplaying() && !MessagesDisplay.IsDisplaying();
+        bool obstructed = MenuDisplay.IsDisplaying() || MessagesDisplay.IsDisplaying() || busy;
+        // Start the reading timer only when the player can actually see the bubble.
+        if (pendingBubble && !obstructed && !muted)
+        {
+            visibleUntil = Time.unscaledTime + bubbleDuration;
+            pendingBubble = false;
+        }
+        if (obstructed && Time.unscaledTime < visibleUntil) visibleUntil += Time.unscaledDeltaTime;
+        bool visible = Time.unscaledTime < visibleUntil && !muted && !obstructed;
         bubbleCanvas.SetActive(visible);
         if (visible && Camera.main != null)
         {
@@ -140,13 +158,15 @@ public sealed class DumbubuSpeechController : MonoBehaviour
             screen.y = Mathf.Clamp(screen.y + 14, 8, Mathf.Max(8, Screen.height - height - 8));
             bubble.position = screen;
         }
-        if (client.Connected && !muted && !busy && !speaking && Time.unscaledTime >= nextSpeech &&
+        if (client.Connected && !muted && !speechPaused && !busy && !speaking && Time.unscaledTime >= nextSpeech &&
             !MenuDisplay.IsDisplaying() && !MessagesDisplay.IsDisplaying()) _ = SpeakAsync();
     }
 
     private async Task SpeakAsync()
     {
         speaking = true;
+        statusLabel.text = "Connected. Waiting for Dumbubu's first words…";
+        RefreshControls();
         operation = new CancellationTokenSource();
         var current = operation;
         float startedAt = Time.unscaledTime;
@@ -158,20 +178,22 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         {
             string line = await client.SpeakAsync(skill, context, recentLines.ToArray(), current.Token);
             if (shuttingDown || current.IsCancellationRequested || muted || busy) return;
-            bubbleText.text = line;
-            bubbleText.rectTransform.sizeDelta = new Vector2(302, Mathf.Max(50, bubbleText.GetPreferredValues(line, 302, 0).y));
-            float height = bubbleText.rectTransform.sizeDelta.y + 24;
-            bubble.sizeDelta = new Vector2(330, height);
-            bubbleText.rectTransform.anchoredPosition = new Vector2(0, height * 0.5f);
-            visibleUntil = Time.unscaledTime + 10f;
+            ShowBubble(line);
             recentLines.Enqueue(line);
             while (recentLines.Count > 5) recentLines.Dequeue();
             failures = 0;
             statusLabel.text = "Connected. Dumbubu speaks every 30 seconds.";
         }
-        catch (OperationCanceledException) { if (!shuttingDown && !current.IsCancellationRequested) { failures++; statusLabel.text = "ChatGPT timed out. Trying again shortly."; } }
-        catch (ChatGptException error) { if (!shuttingDown) { failures++; statusLabel.text = error.Message; } }
-        catch (Exception) { if (!shuttingDown) { failures++; statusLabel.text = "Dumbubu couldn't connect. Trying again shortly."; } }
+        catch (OperationCanceledException) { if (!shuttingDown && !current.IsCancellationRequested) SpeechFailed("ChatGPT timed out. Trying again shortly."); }
+        catch (ChatGptException error)
+        {
+            if (!shuttingDown)
+            {
+                speechPaused = error.PausesSpeech;
+                SpeechFailed(error.Message);
+            }
+        }
+        catch (Exception) { if (!shuttingDown) SpeechFailed("Dumbubu couldn't connect. Trying again shortly."); }
         finally
         {
             speaking = false;
@@ -186,12 +208,34 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         }
     }
 
+    private void ShowBubble(string text, float duration = 10f)
+    {
+        bubbleText.text = text;
+        bubbleText.rectTransform.sizeDelta = new Vector2(302, Mathf.Max(50, bubbleText.GetPreferredValues(text, 302, 0).y));
+        float height = bubbleText.rectTransform.sizeDelta.y + 24;
+        bubble.sizeDelta = new Vector2(330, height);
+        bubbleText.rectTransform.anchoredPosition = Vector2.zero;
+        bubbleDuration = duration;
+        pendingBubble = true;
+    }
+
+    private void SpeechFailed(string message)
+    {
+        failures++;
+        statusLabel.text = message;
+        // The mapped message contains no provider body, account identifier, or credentials.
+        Debug.Log("Dumbubu speech: " + message);
+        ShowBubble(speechPaused ? "ChatGPT speech paused. Check ChatGPT Usage settings in my menu."
+            : "ChatGPT speech unavailable. Open my menu for details.", 15f);
+    }
+
     private async Task ChangeConnectionAsync()
     {
         if (client == null || busy) return;
         operation?.Cancel();
         busy = true;
         visibleUntil = 0;
+        pendingBubble = false;
         var current = new CancellationTokenSource();
         operation = current;
         RefreshControls();
@@ -212,8 +256,10 @@ public sealed class DumbubuSpeechController : MonoBehaviour
                     selectedClient = client.Registrations.ActiveClientId;
                     recentLines.Clear();
                     failures = 0;
+                    speechPaused = false;
                     nextSpeech = Time.unscaledTime + 1f;
-                    statusLabel.text = "Connected. Dumbubu speaks every 30 seconds.";
+                    statusLabel.text = "Connected. Close this menu to hear Dumbubu, or Test speech now.";
+                    ShowBubble("ChatGPT connected. Getting my thoughts ready…");
                 }
             }
         }
@@ -243,6 +289,7 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         PlayerPrefs.SetInt("DumbubuSpeechMuted", muted ? 1 : 0);
         PlayerPrefs.Save();
         visibleUntil = 0;
+        pendingBubble = false;
         if (muted && speaking && !busy) operation?.Cancel();
         nextSpeech = Time.unscaledTime + SpeechInterval;
         RefreshControls();
@@ -253,8 +300,9 @@ public sealed class DumbubuSpeechController : MonoBehaviour
         connectButton.interactable = client != null;
         accountButton.interactable = client != null && !busy;
         speechButton.interactable = client != null && !busy;
+        testButton.interactable = client != null && client.Connected && !busy && !speaking && !muted;
         connectLabel.text = busy ? "Cancel" : client != null && client.Connected && selectedClient == client.Registrations.ActiveClientId ? "Disconnect ChatGPT" : "Continue with ChatGPT";
-        speechLabel.text = muted ? "Speech: off" : "Speech: on · every 30 seconds";
+        speechLabel.text = muted ? "Speech: off" : speechPaused ? "Speech: paused · see status" : "Speech: on · every 30 seconds";
         var selected = client?.Registrations.Accounts.Find(a => a.ClientId == selectedClient);
         int activeIndex = client == null ? -1 : client.Registrations.Accounts.FindIndex(a => a.ClientId == client.Registrations.ActiveClientId);
         titleLabel.text = client != null && client.Connected ? "Thoughts · active account " + (activeIndex + 1) : "Dumbubu's thoughts";

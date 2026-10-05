@@ -54,6 +54,14 @@ internal static class Program
         Reject(() => ChatGptProtocol.ReadSpeech("data: {\"type\":\"response.output_text.delta\",\"delta\":\"partial\"}\n"), "Interrupted speech accepted.");
         Reject(() => ChatGptProtocol.ReadSpeech("data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"code\":\"subscription_sharing_usage_limit_exceeded\"}}}\n"), "Failed speech accepted.");
         Reject(() => ChatGptProtocol.ReadSpeech("data: {\"type\":\"response.completed\",\"response\":{\"status\":\"failed\"}}\n"), "Failed terminal status accepted.");
+        try { ChatGptProtocol.ReadSpeech(FakeOpenAI.QuotaFailure); throw new Exception("Quota failure accepted."); }
+        catch (ChatGptException error)
+        {
+            Check(error.PausesSpeech && !error.RequiresSignIn, "Usage limit did not pause speech while preserving sign-in.");
+            Check(error.Code == "subscription_sharing_usage_limit_exceeded", "Generic stream error masked the terminal usage error.");
+        }
+        Reject(() => ChatGptProtocol.ReadSpeech("data: {\"type\":\"error\",\"error\":{\"code\":\"subscription_sharing_usage_limit_exceeded\"}}\n" + FakeOpenAI.Speech), "Completion hid an earlier error.");
+        Check(ChatGptProtocol.Error("subscription_sharing_user_not_eligible", 403).PausesSpeech, "Ineligible account loops through sign-in.");
 
         await TestLoopback();
         await TestClient();
@@ -104,6 +112,11 @@ internal static class Program
                 Check((bool)provider.Payload["stream"] && !(bool)provider.Payload["store"], "Required plan flags missing.");
                 Check((string)provider.Payload["instructions"] == "skill text" && (string)provider.Payload["input"][0]["content"] == "earlier thought", "Skill or recent history omitted.");
                 Check(provider.Payload["tools"] == null && provider.Payload["max_output_tokens"] == null, "Unsupported request fields or tools present.");
+                provider.QuotaExceeded = true;
+                try { await client.SpeakAsync("skill", "context", Array.Empty<string>(), CancellationToken.None); throw new Exception("Usage limit accepted."); }
+                catch (ChatGptException error) { Check(error.PausesSpeech, "Client lost quota pause instruction."); }
+                Check(client.Connected && new ChatGptCredentialStore(directory).Load().Accounts[0].AccessToken != null, "Quota failure erased a valid sign-in.");
+                provider.QuotaExceeded = false;
                 provider.DenyScope = true;
                 try { await client.SignInAsync(null, provider.Browser, CancellationToken.None); throw new Exception("Missing plan scope accepted."); }
                 catch (ChatGptException) { checks++; }
@@ -151,9 +164,10 @@ internal static class Program
         public Dictionary<string, string> Auth, Grant;
         public JObject Payload;
         public bool DenyScope;
-        public bool Unauthorized, RevocationFails;
+        public bool Unauthorized, RevocationFails, QuotaExceeded;
         public string Revoked;
         public const string Speech = "data: {\"type\":\"response.output_text.delta\",\"delta\":\"I am extremely round today.\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{\"status\":\"completed\"}}\n\n";
+        public const string QuotaFailure = "data: {\"type\":\"error\",\"message\":\"Request failed\"}\n\ndata: {\"type\":\"response.failed\",\"response\":{\"status\":\"failed\",\"error\":{\"code\":\"subscription_sharing_usage_limit_exceeded\"}}}\n\n";
 
         public FakeOpenAI()
         {
@@ -200,7 +214,7 @@ internal static class Program
                 Payload = JObject.Parse(await request.Content.ReadAsStringAsync());
                 Check(request.Headers.Authorization.Scheme == "Bearer", "Missing bearer authentication.");
                 if (Unauthorized) return new HttpResponseMessage(HttpStatusCode.Unauthorized) { Content = new StringContent("{\"error\":{\"code\":\"invalid_token\"}}") };
-                body = Speech;
+                body = QuotaExceeded ? QuotaFailure : Speech;
             }
             else if (path.EndsWith("/revoke"))
             {

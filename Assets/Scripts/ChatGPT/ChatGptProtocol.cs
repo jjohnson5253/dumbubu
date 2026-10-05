@@ -104,6 +104,8 @@ namespace Dumbubu.ChatGPT
         {
             var text = new StringBuilder();
             bool completed = false;
+            bool failed = false;
+            string failureCode = null;
             foreach (string line in stream.Replace("\r\n", "\n").Split('\n'))
             {
                 if (!line.StartsWith("data:", StringComparison.Ordinal)) continue;
@@ -114,8 +116,14 @@ namespace Dumbubu.ChatGPT
                 if (type == "response.output_text.delta") text.Append((string)item["delta"]);
                 if (type == "response.completed") completed = (string)item["response"]?["status"] == "completed";
                 if (type == "error" || type == "response.failed" || type == "response.incomplete")
-                    throw Error((string)item["code"] ?? (string)item["response"]?["error"]?["code"]);
+                {
+                    // Some streams send a generic error before the detailed terminal failure.
+                    failed = true;
+                    failureCode = (string)item["response"]?["error"]?["code"] ??
+                        (string)item["error"]?["code"] ?? (string)item["code"] ?? failureCode;
+                }
             }
+            if (failed) throw Error(failureCode);
             if (!completed) throw new ChatGptException("Dumbubu lost the connection. Trying again shortly.");
             string speech = string.Join(" ", text.ToString().Split((char[])null, StringSplitOptions.RemoveEmptyEntries)).Trim('"');
             if (speech.Length == 0) throw new ChatGptException("Dumbubu didn't find its words. Trying again shortly.");
@@ -125,9 +133,13 @@ namespace Dumbubu.ChatGPT
 
         public static ChatGptException Error(string code, int status = 0)
         {
+            if (code == "subscription_sharing_usage_limit_exceeded")
+                return new ChatGptException("ChatGPT app usage limit reached. Check Usage settings, then Test speech now when access is available.", pausesSpeech: true, code: code);
+            if (code == "subscription_sharing_user_not_eligible")
+                return new ChatGptException("This ChatGPT account cannot share its plan with Dumbubu. Check your plan or choose another account.", pausesSpeech: true, code: code);
             if (status == 401 || code == "invalid_grant" || code == "invalid_token")
                 return new ChatGptException("Please reconnect your ChatGPT account.", true);
-            if (code == "subscription_sharing_usage_limit_exceeded" || code == "subscription_sharing_usage_unavailable" || status == 429)
+            if (code == "subscription_sharing_usage_unavailable" || status == 429)
                 return new ChatGptException("ChatGPT usage is unavailable right now. Dumbubu will try again later.");
             if (status == 403) return new ChatGptException("Enable ChatGPT plan access for Dumbubu, then reconnect.", true);
             return new ChatGptException("ChatGPT couldn't complete the request. Trying again shortly.");
@@ -137,6 +149,13 @@ namespace Dumbubu.ChatGPT
     public sealed class ChatGptException : Exception
     {
         public bool RequiresSignIn { get; }
-        public ChatGptException(string message, bool requiresSignIn = false) : base(message) { RequiresSignIn = requiresSignIn; }
+        public bool PausesSpeech { get; }
+        public string Code { get; }
+        public ChatGptException(string message, bool requiresSignIn = false, bool pausesSpeech = false, string code = null) : base(message)
+        {
+            RequiresSignIn = requiresSignIn;
+            PausesSpeech = pausesSpeech;
+            Code = code;
+        }
     }
 }

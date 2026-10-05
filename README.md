@@ -48,7 +48,16 @@ only local time, game activity, points, and up to five recent Dumbubu lines.
 They do not access your desktop contents or ChatGPT conversation history.
 Speech uses your account's available small model when present, otherwise the
 first model in its catalog. Each response must complete successfully before
-the bubble appears; network and usage failures back off to at most five minutes.
+the bubble appears; temporary network and availability failures back off to at
+most five minutes. Usage-limit failures pause automatic speech, preserve the
+connection, and display a notice above Dumbubu. Use **ChatGPT Usage settings**
+to review app access and limits, then **Test speech now** to resume when access
+is available. That code can describe an app-specific limit; it does not establish
+the account's total remaining usage or a reset time.
+
+Close the menu after connecting to see the first speech request. **Test speech
+now** also closes it and requests a line immediately. Speech and error notices
+wait for the menu/startup notice to close before their reading timer begins.
 
 Registrations and tokens are stored under `Application.persistentDataPath/ChatGPT`,
 outside the project and Steam Cloud saves. macOS/Linux files have owner-only
